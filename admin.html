@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study App — Admin</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f0;color:#1a1a1a;min-height:100vh}
+.topbar{background:#1a1a1a;color:#fff;padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between}
+.topbar h1{font-size:15px;font-weight:500;color:#fff}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.topbar-right span{font-size:13px;color:#aaa}
+.logout-btn{font-size:13px;color:#ff6b6b;cursor:pointer;background:none;border:none;padding:4px 8px}
+.container{max-width:980px;margin:0 auto;padding:24px}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.stat-card{background:#fff;border-radius:12px;padding:16px;border:0.5px solid #e5e5e0}
+.stat-val{font-size:26px;font-weight:600;color:#1D9E75}
+.stat-lbl{font-size:12px;color:#888;margin-top:2px}
+.section{background:#fff;border-radius:12px;border:0.5px solid #e5e5e0;margin-bottom:20px;overflow:hidden}
+.sec-hdr{padding:16px 20px;border-bottom:0.5px solid #e5e5e0;display:flex;align-items:center;justify-content:space-between}
+.sec-hdr h2{font-size:15px;font-weight:500}
+.btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none}
+.btn-primary{background:#1D9E75;color:#fff}
+.btn-sm{padding:5px 10px;font-size:12px;border-radius:6px;cursor:pointer;border:0.5px solid #ddd;background:#f9f9f7}
+.btn-danger{background:#FCEBEB;color:#A32D2D;border:0.5px solid #E24B4A}
+.btn-warn{background:#FAEEDA;color:#633806;border:0.5px solid #FAC775}
+.btn-enable{background:#E1F5EE;color:#085041;border:0.5px solid #1D9E75}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#f9f9f7;padding:10px 20px;text-align:left;font-weight:500;color:#555;border-bottom:0.5px solid #e5e5e0}
+td{padding:12px 20px;border-bottom:0.5px solid #f0f0ec;color:#333;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500}
+.badge-active{background:#E1F5EE;color:#085041}
+.badge-inactive{background:#FCEBEB;color:#A32D2D}
+.badge-admin{background:#E6F1FB;color:#185FA5}
+code{background:#f5f5f0;padding:2px 6px;border-radius:4px;font-size:12px}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);display:none;align-items:center;justify-content:center;z-index:100}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:16px;padding:28px;width:100%;max-width:420px}
+.modal h3{font-size:17px;font-weight:500;margin-bottom:20px}
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:13px;font-weight:500;color:#444;margin-bottom:5px}
+.fg input{width:100%;padding:9px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;color:#1a1a1a}
+.fg input:focus{outline:none;border-color:#1D9E75}
+.modal-actions{display:flex;gap:8px;margin-top:20px;justify-content:flex-end}
+.log-item{padding:10px 20px;border-bottom:0.5px solid #f0f0ec;font-size:13px;display:flex;align-items:center;gap:12px}
+.log-time{color:#999;font-size:11px;min-width:150px}
+.log-user{font-weight:500;color:#1D9E75;min-width:80px}
+.empty{padding:28px;text-align:center;color:#999;font-size:13px}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>📚 Study App — Admin</h1>
+  <div class="topbar-right">
+    <span id="adminName"></span>
+    <button class="logout-btn" onclick="logout()">Sign out</button>
+  </div>
+</div>
+<div class="container">
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-val" id="s1">—</div><div class="stat-lbl">Total Students</div></div>
+    <div class="stat-card"><div class="stat-val" id="s2">—</div><div class="stat-lbl">Active Students</div></div>
+    <div class="stat-card"><div class="stat-val" id="s3">—</div><div class="stat-lbl">Topics Studied</div></div>
+    <div class="stat-card"><div class="stat-val" id="s4">—</div><div class="stat-lbl">Logins Today</div></div>
+  </div>
+  <div class="section">
+    <div class="sec-hdr"><h2>Students</h2><button class="btn btn-primary" onclick="openAdd()">+ Add Student</button></div>
+    <table><thead><tr><th>Name</th><th>Username</th><th>Password</th><th>Status</th><th>Last Login</th><th>Topics</th><th>Actions</th></tr></thead>
+    <tbody id="studentsTable"><tr><td colspan="7" class="empty">Loading...</td></tr></tbody></table>
+  </div>
+  <div class="section">
+    <div class="sec-hdr"><h2>Recent Activity</h2><button class="btn-sm" onclick="loadLogs()">Refresh</button></div>
+    <div id="logsContainer"><div class="empty">Loading...</div></div>
+  </div>
+  <div class="section">
+    <div class="sec-hdr"><h2>Topics by Student</h2></div>
+    <table><thead><tr><th>Student</th><th>Subject</th><th>Topic</th><th>Status</th><th>Pages</th><th>Updated</th></tr></thead>
+    <tbody id="topicsTable"><tr><td colspan="6" class="empty">Loading...</td></tr></tbody></table>
+  </div>
+</div>
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <h3>Add Student</h3>
+    <div class="fg"><label>Full Name</label><input type="text" id="newName" placeholder="Student's full name"></div>
+    <div class="fg"><label>Username</label><input type="text" id="newUsername" placeholder="e.g. rahul (no spaces)"></div>
+    <div class="fg"><label>Password</label><input type="text" id="newPassword" placeholder="Set a password"></div>
+    <div class="modal-actions">
+      <button class="btn-sm" onclick="closeAdd()">Cancel</button>
+      <button class="btn btn-primary" onclick="addStudent()">Add Student</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h3>Change Password</h3>
+    <input type="hidden" id="editId">
+    <div class="fg"><label>Student</label><input type="text" id="editName" disabled style="background:#f9f9f7"></div>
+    <div class="fg"><label>New Password</label><input type="text" id="editPwd" placeholder="Enter new password"></div>
+    <div class="modal-actions">
+      <button class="btn-sm" onclick="closeEdit()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePwd()">Save</button>
+    </div>
+  </div>
+</div>
+<script>
+const SB='https://qrsihxclhfwgcveqiyxs.supabase.co';
+const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFyc2loeGNsaGZ3Z2N2ZXFpeXhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3Mzg1MzMsImV4cCI6MjA5MzMxNDUzM30.tN1AbODqTjjP2mD0DYQ2t38g6-E8Qy54CS95PImazcM';
+const GH={'apikey':SK,'Authorization':'Bearer '+SK};
+const PH={...GH,'Content-Type':'application/json','Prefer':'return=minimal'};
+async function get(t,q){const r=await fetch(`${SB}/rest/v1/${t}?${q}`,{headers:GH});return r.json();}
+async function post(t,b){const r=await fetch(`${SB}/rest/v1/${t}`,{method:'POST',headers:{...GH,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(b)});return r.json();}
+async function patch(t,q,b){await fetch(`${SB}/rest/v1/${t}?${q}`,{method:'PATCH',headers:PH,body:JSON.stringify(b)});}
+async function del(t,q){await fetch(`${SB}/rest/v1/${t}?${q}`,{method:'DELETE',headers:GH});}
+
+const user=JSON.parse(sessionStorage.getItem('user')||'null');
+if(!user||user.role!=='admin'){window.location.href='index.html';}
+document.getElementById('adminName').textContent=user.name;
+
+async function loadAll(){
+  const [students,topics,logs]=await Promise.all([
+    get('app_users','role=eq.student&select=*&order=created_at'),
+    get('topics','select=*,app_users(name)&order=updated_at.desc'),
+    get('access_logs',`action=eq.login&created_at=gte.${new Date().toISOString().split('T')[0]}&select=id`)
+  ]);
+  const topicCounts={};
+  (topics||[]).forEach(t=>{topicCounts[t.user_id]=(topicCounts[t.user_id]||0)+1;});
+  document.getElementById('s1').textContent=students?.length||0;
+  document.getElementById('s2').textContent=students?.filter(s=>s.is_active).length||0;
+  document.getElementById('s3').textContent=topics?.length||0;
+  document.getElementById('s4').textContent=logs?.length||0;
+  const tb=document.getElementById('studentsTable');
+  if(!students||!students.length){tb.innerHTML='<tr><td colspan="7" class="empty">No students yet.</td></tr>';}
+  else{tb.innerHTML=students.map(s=>`<tr>
+    <td><strong>${s.name}</strong></td>
+    <td><code>${s.username}</code></td>
+    <td><code>${s.password_hash}</code></td>
+    <td><span class="badge ${s.is_active?'badge-active':'badge-inactive'}">${s.is_active?'Active':'Disabled'}</span></td>
+    <td style="color:#888;font-size:12px">${s.last_login?new Date(s.last_login).toLocaleString('en-IN'):'Never'}</td>
+    <td>${topicCounts[s.id]||0}</td>
+    <td><div class="actions">
+      <button class="btn-sm btn-warn" onclick="openEdit('${s.id}','${s.name}')">Change Pwd</button>
+      <button class="btn-sm ${s.is_active?'btn-danger':'btn-enable'}" onclick="toggleActive('${s.id}',${s.is_active})">${s.is_active?'Disable':'Enable'}</button>
+      <button class="btn-sm btn-danger" onclick="deleteStudent('${s.id}','${s.name}')">Delete</button>
+    </div></td>
+  </tr>`).join('');}
+  const ttb=document.getElementById('topicsTable');
+  if(!topics||!topics.length){ttb.innerHTML='<tr><td colspan="6" class="empty">No topics yet</td></tr>';}
+  else{ttb.innerHTML=topics.map(t=>`<tr>
+    <td><strong>${t.app_users?.name||'—'}</strong></td>
+    <td>${t.subject}</td><td>${t.topic_name}</td>
+    <td><span class="badge ${t.status==='completed'?'badge-active':''}">${t.status==='completed'?'Complete':'In Progress'}</span></td>
+    <td>${t.page_count||0}</td>
+    <td style="color:#888;font-size:12px">${new Date(t.updated_at).toLocaleDateString('en-IN')}</td>
+  </tr>`).join('');}
+  loadLogs();
+}
+
+async function loadLogs(){
+  const logs=await get('access_logs','select=*,app_users(name)&order=created_at.desc&limit=25');
+  const c=document.getElementById('logsContainer');
+  if(!logs||!logs.length){c.innerHTML='<div class="empty">No activity yet</div>';return;}
+  c.innerHTML=logs.map(l=>`<div class="log-item"><span class="log-time">${new Date(l.created_at).toLocaleString('en-IN')}</span><span class="log-user">${l.app_users?.name||'?'}</span><span>${fmtAction(l.action,l.subject,l.topic)}</span></div>`).join('');
+}
+
+function fmtAction(a,s,t){if(a==='login')return 'logged in';if(a==='upload')return `uploaded pages · ${s} — ${t}`;if(a==='finish')return `completed · ${s} — ${t}`;if(a==='view')return `viewed · ${s} — ${t}`;return a;}
+
+async function toggleActive(id,cur){await patch('app_users',`id=eq.${id}`,{is_active:!cur});loadAll();}
+
+async function deleteStudent(id,name){
+  if(!confirm(`Delete "${name}"? All their data will be lost permanently.`))return;
+  await del('topics',`user_id=eq.${id}`);
+  await del('access_logs',`user_id=eq.${id}`);
+  await del('app_users',`id=eq.${id}`);
+  loadAll();
+}
+
+function openAdd(){document.getElementById('addModal').classList.add('show');}
+function closeAdd(){document.getElementById('addModal').classList.remove('show');}
+function openEdit(id,name){document.getElementById('editId').value=id;document.getElementById('editName').value=name;document.getElementById('editPwd').value='';document.getElementById('editModal').classList.add('show');}
+function closeEdit(){document.getElementById('editModal').classList.remove('show');}
+
+async function addStudent(){
+  const name=document.getElementById('newName').value.trim();
+  const username=document.getElementById('newUsername').value.trim().toLowerCase().replace(/\s/g,'');
+  const password=document.getElementById('newPassword').value.trim();
+  if(!name||!username||!password){alert('Please fill all fields');return;}
+  const r=await post('app_users',{name,username,password_hash:password,role:'student',is_active:true});
+  if(r&&r[0]){closeAdd();document.getElementById('newName').value='';document.getElementById('newUsername').value='';document.getElementById('newPassword').value='';loadAll();}
+  else{alert('Error — username may already be taken');}
+}
+
+async function savePwd(){
+  const id=document.getElementById('editId').value;
+  const pwd=document.getElementById('editPwd').value.trim();
+  if(!pwd){alert('Please enter a password');return;}
+  await patch('app_users',`id=eq.${id}`,{password_hash:pwd});
+  closeEdit();loadAll();
+}
+
+function logout(){sessionStorage.clear();window.location.href='index.html';}
+loadAll();
+setInterval(loadLogs,30000);
+</script>
+</body>
+</html>
