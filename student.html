@@ -3,125 +3,147 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Study App</title>
+<title>Study App — Study Portal</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f0;color:#1a1a1a;min-height:100vh}
 .topbar{background:#1a1a1a;color:#fff;padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
-.topbar h1{font-size:15px;font-weight:500;color:#fff}
+.topbar h1{font-size:15px;font-weight:500}
 .topbar-right{display:flex;align-items:center;gap:16px}
 .topbar-right span{font-size:13px;color:#aaa}
-.logout-btn{font-size:13px;color:#ff6b6b;cursor:pointer;background:none;border:none;padding:4px 8px}
+.logout-btn{font-size:13px;color:#ff6b6b;cursor:pointer;background:none;border:none}
 .layout{display:flex;min-height:calc(100vh - 52px)}
-.sidebar{width:210px;background:#fff;border-right:0.5px solid #e5e5e0;flex-shrink:0;overflow-y:auto;padding:12px 0}
-.sidebar-label{font-size:11px;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:0.5px;padding:0 16px 10px}
-.subj{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;border-left:3px solid transparent;transition:all .15s}
-.subj:hover{background:#f9f9f7}
-.subj.active{background:#f0faf5;border-left-color:#1D9E75}
-.subj-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
-.subj-name{font-size:13px;font-weight:500;color:#1a1a1a}
-.subj-count{font-size:11px;color:#999;margin-top:1px}
-.main{flex:1;padding:24px;overflow-y:auto}
-.ph{text-align:center;padding:80px 24px;color:#999}
-.ph-icon{font-size:48px;margin-bottom:12px;opacity:0.3}
-.ph-title{font-size:16px;font-weight:500;color:#666}
-.ph-sub{font-size:13px;margin-top:6px}
-.page-hdr{margin-bottom:20px}
-.page-hdr h2{font-size:20px;font-weight:600}
-.page-hdr p{font-size:13px;color:#666;margin-top:3px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:20px}
+.sidebar{width:220px;background:#fff;border-right:0.5px solid #e5e5e0;flex-shrink:0;overflow-y:auto}
+.sidebar-section{padding:12px 0;border-bottom:0.5px solid #f0f0ec}
+.sidebar-section-title{font-size:11px;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:0.5px;padding:0 16px 8px}
+.subject-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;transition:background .15s;border-left:3px solid transparent}
+.subject-item:hover{background:#f9f9f7}
+.subject-item.active{background:#f0faf5;border-left-color:#1D9E75}
+.subject-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.subject-name{font-size:13px;font-weight:500}
+.subject-count{font-size:11px;color:#999;margin-top:1px}
+.main{flex:1;overflow-y:auto;padding:20px}
+.page-header{margin-bottom:20px}
+.page-header h2{font-size:20px;font-weight:600}
+.page-header p{font-size:14px;color:#666;margin-top:4px}
+.topics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:24px}
 .topic-card{background:#fff;border-radius:12px;padding:16px;cursor:pointer;border:0.5px solid #e5e5e0;transition:all .15s}
-.topic-card:hover{border-color:#1D9E75;box-shadow:0 2px 8px rgba(29,158,117,0.1)}
-.topic-card.done{border-left:3px solid #1D9E75}
-.tc-num{font-size:11px;color:#999;margin-bottom:4px}
-.tc-name{font-size:13px;font-weight:500;line-height:1.4}
-.tc-tags{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
-.tc-tag{font-size:10px;padding:2px 6px;border-radius:8px;background:#f0f0ec;color:#666}
-.tc-tag.done{background:#E1F5EE;color:#085041}
-.new-card{background:#f9f9f7;border:1.5px dashed #ddd;border-radius:12px;padding:16px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:110px;transition:all .15s}
-.new-card:hover{border-color:#1D9E75;background:#f0faf5}
-.new-card span{font-size:13px;color:#999;margin-top:6px}
-.back-btn{display:flex;align-items:center;gap:6px;font-size:13px;color:#666;cursor:pointer;margin-bottom:16px;background:none;border:none;padding:6px 0}
+.topic-card:hover{border-color:#1D9E75;transform:translateY(-1px)}
+.topic-card.completed{border-left:3px solid #1D9E75}
+.topic-num{font-size:11px;color:#999;margin-bottom:4px}
+.topic-name{font-size:13px;font-weight:500;line-height:1.4}
+.topic-tags{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
+.topic-tag{font-size:10px;padding:2px 6px;border-radius:8px;background:#f0f0ec;color:#666}
+.topic-tag.done{background:#E1F5EE;color:#085041}
+.new-topic-card{background:#f9f9f7;border:1.5px dashed #ddd;border-radius:12px;padding:16px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100px;transition:all .15s}
+.new-topic-card:hover{border-color:#1D9E75;background:#f0faf5}
+.new-topic-card span{font-size:13px;color:#999;margin-top:6px}
+
+/* Topic detail view */
+.back-btn{display:flex;align-items:center;gap:6px;font-size:13px;color:#666;cursor:pointer;margin-bottom:16px;padding:6px 0;border:none;background:none}
 .back-btn:hover{color:#1a1a1a}
-.topic-hdr{background:#fff;border-radius:12px;padding:20px;margin-bottom:16px;border:0.5px solid #e5e5e0}
-.topic-hdr h2{font-size:18px;font-weight:600;margin-bottom:4px}
-.topic-hdr p{font-size:13px;color:#666}
-.badges{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
-.tbadge{font-size:11px;padding:3px 8px;border-radius:10px;background:#E1F5EE;color:#085041}
-.tabs{display:flex;background:#fff;border-radius:10px;border:0.5px solid #e5e5e0;margin-bottom:16px;overflow:hidden}
-.tab{flex:1;padding:10px 6px;font-size:13px;cursor:pointer;color:#666;border:none;background:none;font-weight:500;transition:all .15s}
+.topic-header{background:#fff;border-radius:12px;padding:20px;margin-bottom:16px;border:0.5px solid #e5e5e0}
+.topic-header h2{font-size:18px;font-weight:600;margin-bottom:4px}
+.topic-header p{font-size:13px;color:#666}
+.topic-badges{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.topic-badge{font-size:11px;padding:3px 8px;border-radius:10px;background:#E1F5EE;color:#085041}
+.tab-bar{display:flex;background:#fff;border-radius:10px;border:0.5px solid #e5e5e0;margin-bottom:16px;overflow:hidden}
+.tab{flex:1;padding:10px 8px;font-size:13px;cursor:pointer;color:#666;border:none;background:none;transition:all .15s;font-weight:500}
 .tab.active{background:#1D9E75;color:#fff}
 .tab-content{background:#fff;border-radius:12px;padding:20px;border:0.5px solid #e5e5e0;min-height:300px}
+
+/* Upload section */
 .upload-area{border:2px dashed #ddd;border-radius:12px;padding:32px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px}
-.upload-area:hover{border-color:#1D9E75;background:#f0faf5}
+.upload-area:hover,.upload-area.dragover{border-color:#1D9E75;background:#f0faf5}
 .upload-area input{display:none}
-.up-icon{font-size:32px;margin-bottom:8px}
-.up-text{font-size:14px;font-weight:500;color:#333}
-.up-sub{font-size:12px;color:#999;margin-top:4px}
-.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:16px}
-.thumb{background:#f5f5f0;border-radius:8px;padding:8px;text-align:center;font-size:11px;color:#666;border:0.5px solid #e5e5e0;position:relative}
-.thumb img{width:100%;height:65px;object-fit:cover;border-radius:6px;margin-bottom:4px}
-.thumb-rm{position:absolute;top:4px;right:4px;background:#ff6b6b;color:#fff;border:none;border-radius:50%;width:18px;height:18px;cursor:pointer;font-size:11px;line-height:18px;text-align:center;padding:0}
-.btn-primary{background:#1D9E75;color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:500;cursor:pointer}
+.upload-icon{font-size:32px;margin-bottom:8px}
+.upload-text{font-size:14px;font-weight:500;color:#333}
+.upload-sub{font-size:12px;color:#999;margin-top:4px}
+.uploaded-files{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:16px}
+.file-thumb{background:#f5f5f0;border-radius:8px;padding:10px;text-align:center;font-size:11px;color:#666;border:0.5px solid #e5e5e0;position:relative}
+.file-thumb img{width:100%;height:70px;object-fit:cover;border-radius:6px;margin-bottom:4px}
+.file-remove{position:absolute;top:4px;right:4px;background:#ff6b6b;color:#fff;border:none;border-radius:50%;width:18px;height:18px;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center}
+.btn{padding:10px 20px;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:#1D9E75;color:#fff}
 .btn-primary:hover{background:#17896A}
-.btn-dark{background:#1a1a1a;color:#fff;width:100%;padding:14px;font-size:15px;margin-top:12px;border-radius:10px;border:none;cursor:pointer;font-weight:500}
-.btn-dark:hover{background:#333}
-.btn-sec{background:#f0f0ec;color:#333;border:none;border-radius:10px;padding:8px 16px;font-size:13px;cursor:pointer}
-.pg-counter{background:#E1F5EE;color:#085041;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;display:inline-block;margin-bottom:12px}
-.status-msg{font-size:13px;color:#666;text-align:center;padding:8px;min-height:24px}
-.notes-content h3{font-size:15px;font-weight:600;margin:16px 0 8px}
+.btn-primary:disabled{background:#ccc;cursor:not-allowed}
+.btn-secondary{background:#f0f0ec;color:#333}
+.btn-finish{background:#1a1a1a;color:#fff;width:100%;padding:14px;font-size:15px;margin-top:12px}
+.btn-finish:hover{background:#333}
+.btn-finish:disabled{background:#ccc}
+.progress-bar{height:6px;background:#f0f0ec;border-radius:3px;margin:12px 0;overflow:hidden}
+.progress-fill{height:100%;background:#1D9E75;border-radius:3px;transition:width .3s}
+.status-msg{font-size:13px;color:#666;text-align:center;padding:8px}
+.page-counter{background:#E1F5EE;color:#085041;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;display:inline-block;margin-bottom:12px}
+
+/* Notes styles */
+.notes-content h3{font-size:15px;font-weight:600;margin:16px 0 8px;color:#1a1a1a}
 .notes-content h3:first-child{margin-top:0}
-.notes-content h4{font-size:14px;font-weight:600;margin:12px 0 6px;color:#333}
 .notes-content p{font-size:14px;color:#333;line-height:1.75;margin-bottom:10px}
 .notes-content ul{padding-left:20px;margin-bottom:10px}
 .notes-content li{font-size:14px;color:#333;line-height:1.75;margin-bottom:4px}
 .notes-content .formula{background:#f5f5f0;border:0.5px solid #ddd;border-radius:8px;padding:10px 14px;font-family:monospace;font-size:13px;margin:8px 0;text-align:center}
-.notes-content .highlight{background:#FFF9E6;border-left:3px solid #F59E0B;padding:10px 14px;border-radius:0 8px 8px 0;margin:10px 0;font-size:14px;line-height:1.6}
-.notes-content .mnemonic{background:#FAEEDA;border-radius:8px;padding:10px 14px;margin:8px 0;font-size:13px;color:#633806;line-height:1.6}
+.notes-content .highlight{background:#FFF9E6;border-left:3px solid #F59E0B;padding:10px 14px;border-radius:0 8px 8px 0;margin:10px 0;font-size:14px}
+.notes-content .mnemonic{background:#FAEEDA;border-radius:8px;padding:10px 14px;margin:8px 0;font-size:13px;color:#633806}
 .notes-content table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
 .notes-content th{background:#f5f5f0;padding:8px 12px;text-align:left;font-weight:500;border-bottom:1px solid #e5e5e0}
 .notes-content td{padding:8px 12px;border-bottom:0.5px solid #f0f0ec;color:#444;line-height:1.5}
-.fc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:10px}
-.fc{border:0.5px solid #e5e5e0;border-radius:12px;padding:14px;cursor:pointer;min-height:88px;display:flex;flex-direction:column;justify-content:center;text-align:center;transition:all .2s;background:#fff}
+
+/* Flashcards */
+.fc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.fc{border:0.5px solid #e5e5e0;border-radius:12px;padding:14px;cursor:pointer;min-height:90px;display:flex;flex-direction:column;justify-content:center;text-align:center;transition:all .2s;background:#fff}
 .fc:hover{border-color:#1D9E75}
 .fc.flipped{background:#f0faf5;border-color:#1D9E75}
 .fc-q{font-size:13px;font-weight:500;line-height:1.4}
 .fc-a{font-size:12px;color:#085041;margin-top:8px;display:none;line-height:1.5}
 .fc.flipped .fc-a{display:block}
 .fc.flipped .fc-q{color:#085041}
-.fc-hint{font-size:11px;color:#ccc;margin-top:6px}
+.fc-hint{font-size:11px;color:#bbb;margin-top:6px}
 .fc.flipped .fc-hint{display:none}
-.quiz-item{border:0.5px solid #e5e5e0;border-radius:12px;padding:16px;margin-bottom:12px;background:#fff}
+
+/* Quiz */
+.quiz-item{border:0.5px solid #e5e5e0;border-radius:12px;padding:16px;margin-bottom:12px}
 .quiz-q{font-size:14px;font-weight:500;margin-bottom:10px;line-height:1.5}
 .quiz-opts{display:flex;flex-direction:column;gap:6px}
-.quiz-opt{padding:9px 14px;border:0.5px solid #e5e5e0;border-radius:8px;font-size:13px;cursor:pointer;text-align:left;background:#fff;transition:background .15s;color:#1a1a1a}
+.quiz-opt{padding:9px 14px;border:0.5px solid #e5e5e0;border-radius:8px;font-size:13px;cursor:pointer;text-align:left;background:#fff;transition:background .15s}
 .quiz-opt:hover:not(:disabled){background:#f5f5f0}
 .quiz-opt.correct{background:#E1F5EE;border-color:#1D9E75;color:#085041}
 .quiz-opt.wrong{background:#FCEBEB;border-color:#E24B4A;color:#A32D2D}
 .quiz-exp{font-size:12px;color:#666;margin-top:8px;padding:8px;background:#f9f9f7;border-radius:8px;display:none;line-height:1.5}
 .score-banner{background:#1D9E75;color:#fff;border-radius:10px;padding:14px;text-align:center;margin-bottom:16px}
+.score-banner h3{font-size:18px;font-weight:600}
+.score-banner p{font-size:13px;margin-top:2px;opacity:0.85}
+
+/* Modal */
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);display:none;align-items:center;justify-content:center;z-index:100}
 .modal-overlay.show{display:flex}
-.modal{background:#fff;border-radius:16px;padding:28px;width:100%;max-width:420px}
+.modal{background:#fff;border-radius:16px;padding:28px;width:100%;max-width:440px}
 .modal h3{font-size:17px;font-weight:600;margin-bottom:16px}
-.fg{margin-bottom:14px}
-.fg label{display:block;font-size:13px;font-weight:500;color:#444;margin-bottom:5px}
-.fg input{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;color:#1a1a1a}
-.fg input:focus{outline:none;border-color:#1D9E75}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:13px;font-weight:500;color:#444;margin-bottom:5px}
+.form-group input,.form-group select{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:#1D9E75}
 .modal-actions{display:flex;gap:8px;margin-top:20px;justify-content:flex-end}
-.loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.92);display:none;align-items:center;justify-content:center;z-index:200;flex-direction:column;gap:14px}
+
+/* Simulation */
+.sim-frame{width:100%;min-height:400px;border:none;border-radius:8px}
+.sim-placeholder{text-align:center;padding:48px 24px;color:#999}
+
+.empty-state{text-align:center;padding:48px 24px;color:#999}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:0.4}
+.empty-title{font-size:16px;font-weight:500;color:#555}
+.empty-sub{font-size:13px;margin-top:6px;line-height:1.6}
+.loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.9);display:none;align-items:center;justify-content:center;z-index:200;flex-direction:column;gap:12px}
 .loading-overlay.show{display:flex}
 .spinner{width:36px;height:36px;border:3px solid #e5e5e0;border-top-color:#1D9E75;border-radius:50%;animation:spin 0.8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.loading-text{font-size:15px;color:#333;font-weight:500}
-.loading-sub{font-size:13px;color:#999}
-.empty{text-align:center;padding:48px 24px;color:#999}
-.empty-icon{font-size:40px;margin-bottom:12px;opacity:0.35}
-.empty-title{font-size:15px;font-weight:500;color:#666}
-.empty-sub{font-size:13px;margin-top:6px;line-height:1.6;max-width:300px;margin-left:auto;margin-right:auto}
+.loading-text{font-size:14px;color:#666}
+.loading-sub{font-size:12px;color:#999}
 </style>
 </head>
 <body>
+
 <div class="topbar">
   <h1>📚 Study App</h1>
   <div class="topbar-right">
@@ -129,540 +151,492 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <button class="logout-btn" onclick="logout()">Sign out</button>
   </div>
 </div>
+
 <div class="layout">
-  <div class="sidebar">
-    <div class="sidebar-label">Subjects</div>
-    <div id="subjectList"></div>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Subjects</div>
+      <div id="subjectList"></div>
+    </div>
   </div>
   <div class="main" id="mainContent">
-    <div class="ph"><div class="ph-icon">👈</div><div class="ph-title">Select a subject</div><div class="ph-sub">Choose from the left to start studying</div></div>
-  </div>
-</div>
-<div class="modal-overlay" id="newTopicModal">
-  <div class="modal">
-    <h3>New Topic</h3>
-    <div class="fg"><label>Topic / Chapter Name</label><input type="text" id="newTopicName" placeholder="e.g. Laws of Motion, Hydrogen..."></div>
-    <div class="modal-actions">
-      <button class="btn-sec" onclick="closeModal()">Cancel</button>
-      <button class="btn-primary" onclick="createTopic()">Start Topic</button>
+    <div class="empty-state">
+      <div class="empty-icon">👈</div>
+      <div class="empty-title">Select a subject</div>
+      <div class="empty-sub">Choose a subject from the left to start studying</div>
     </div>
   </div>
 </div>
+
+<!-- New Topic Modal -->
+<div class="modal-overlay" id="newTopicModal">
+  <div class="modal">
+    <h3>Start New Topic</h3>
+    <div class="form-group">
+      <label>Topic / Chapter Name</label>
+      <input type="text" id="newTopicName" placeholder="e.g. Laws of Motion, Hydrogen, Trigonometry...">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeNewTopicModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="createTopic()">Start Topic</button>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
 <div class="loading-overlay" id="loadingOverlay">
   <div class="spinner"></div>
-  <div class="loading-text" id="loadingText">Processing...</div>
-  <div class="loading-sub" id="loadingSub">Please wait</div>
+  <div class="loading-text" id="loadingText">Processing your pages...</div>
+  <div class="loading-sub" id="loadingSub">This may take 30-60 seconds</div>
 </div>
+
 <script>
-const SB='https://qrsihxclhfwgcveqiyxs.supabase.co';
-const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFyc2loeGNsaGZ3Z2N2ZXFpeXhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3Mzg1MzMsImV4cCI6MjA5MzMxNDUzM30.tN1AbODqTjjP2mD0DYQ2t38g6-E8Qy54CS95PImazcM';
-const WORKER='https://study-app-claude.sai-sivadasan.workers.dev';
-const GH={'apikey':SK,'Authorization':'Bearer '+SK};
+const SUPABASE_URL = 'https://qrsihxclhfwgcveqiyxs.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFyc2loeGNsaGZ3Z2N2ZXFpeXhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3Mzg1MzMsImV4cCI6MjA5MzMxNDUzM30.tN1AbODqTjjP2mD0DYQ2t38g6-E8Qy54CS95PImazcM';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-async function sbGet(t,q){
-  try{const r=await fetch(SB+'/rest/v1/'+t+'?'+q,{headers:GH});return await r.json();}
-  catch(e){return [];}
-}
-async function sbPost(t,b){
-  try{const r=await fetch(SB+'/rest/v1/'+t,{method:'POST',headers:{...GH,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(b)});return await r.json();}
-  catch(e){return null;}
-}
-async function sbPatch(t,q,b){
-  try{await fetch(SB+'/rest/v1/'+t+'?'+q,{method:'PATCH',headers:{...GH,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(b)});}
-  catch(e){}
-}
+const CLAUDE_KEY_STORAGE = 'claude_api_key';
+let claudeKey = localStorage.getItem(CLAUDE_KEY_STORAGE) || '';
 
-const user=JSON.parse(sessionStorage.getItem('user')||'null');
-if(!user||user.role!=='student'){window.location.href='index.html';}
-document.getElementById('studentName').textContent=user.name;
+const user = JSON.parse(sessionStorage.getItem('user') || 'null');
+if(!user || user.role !== 'student') window.location.href = 'index.html';
+document.getElementById('studentName').textContent = user.name;
 
-const SUBJECTS=[
-  {id:'physics',name:'Physics',icon:'⚛',color:'#378ADD',bg:'#E6F1FB'},
-  {id:'chemistry',name:'Chemistry',icon:'🧪',color:'#1D9E75',bg:'#E1F5EE'},
-  {id:'biology',name:'Biology',icon:'🌿',color:'#D85A30',bg:'#FAECE7'},
-  {id:'maths',name:'Mathematics',icon:'∑',color:'#BA7517',bg:'#FAEEDA'},
-  {id:'geography',name:'Geography',icon:'🌍',color:'#534AB7',bg:'#EEEDFE'},
-  {id:'history',name:'History',icon:'📜',color:'#5F5E5A',bg:'#F1EFE8'},
+const SUBJECTS = [
+  { id:'physics', name:'Physics', icon:'⚛', color:'#378ADD', bg:'#E6F1FB' },
+  { id:'chemistry', name:'Chemistry', icon:'🧪', color:'#1D9E75', bg:'#E1F5EE' },
+  { id:'biology', name:'Biology', icon:'🌿', color:'#D85A30', bg:'#FAECE7' },
+  { id:'maths', name:'Mathematics', icon:'∑', color:'#BA7517', bg:'#FAEEDA' },
+  { id:'geography', name:'Geography', icon:'🌍', color:'#534AB7', bg:'#EEEDFE' },
+  { id:'history', name:'History', icon:'📜', color:'#5F5E5A', bg:'#F1EFE8' },
 ];
 
-var curSubject=null,curTopic=null,curTab='upload',allTopics=[],uploadedImages=[],quizAnswered=0,quizScore=0;
+let currentSubject = null;
+let currentTopic = null;
+let currentTab = 'upload';
+let uploadedImages = [];
+let allTopics = [];
+let quizAnswered = 0;
+let quizScore = 0;
 
-async function loadTopics(){
-  try{
-    var data=await sbGet('topics','user_id=eq.'+user.id+'&select=*');
-    allTopics=Array.isArray(data)?data:[];
-  }catch(e){allTopics=[];}
+// Check for API key
+if(!claudeKey) {
+  setTimeout(() => {
+    const key = prompt('Please enter your Claude API key to enable AI features:\n(Get it from console.anthropic.com → API Keys)');
+    if(key) { localStorage.setItem(CLAUDE_KEY_STORAGE, key); claudeKey = key; }
+  }, 500);
+}
+
+async function loadTopics() {
+  const { data } = await supabase.from('topics').select('*').eq('user_id', user.id);
+  allTopics = data || [];
   renderSidebar();
 }
 
-function renderSidebar(){
-  var html='';
-  for(var i=0;i<SUBJECTS.length;i++){
-    var s=SUBJECTS[i];
-    var cnt=0;
-    for(var j=0;j<allTopics.length;j++){if(allTopics[j].subject===s.id)cnt++;}
-    html+='<div class="subj '+(curSubject&&curSubject.id===s.id?'active':'')+'" onclick="selectSubject(\''+s.id+'\')">';
-    html+='<div class="subj-icon" style="background:'+s.bg+';color:'+s.color+'">'+s.icon+'</div>';
-    html+='<div><div class="subj-name">'+s.name+'</div><div class="subj-count">'+cnt+' topic'+(cnt!==1?'s':'')+'</div></div>';
-    html+='</div>';
-  }
-  document.getElementById('subjectList').innerHTML=html;
+function renderSidebar() {
+  const list = document.getElementById('subjectList');
+  list.innerHTML = SUBJECTS.map(s => {
+    const count = allTopics.filter(t => t.subject === s.id).length;
+    return `<div class="subject-item ${currentSubject?.id===s.id?'active':''}" onclick="selectSubject('${s.id}')">
+      <div class="subject-icon" style="background:${s.bg};color:${s.color}">${s.icon}</div>
+      <div>
+        <div class="subject-name">${s.name}</div>
+        <div class="subject-count">${count} topic${count!==1?'s':''}</div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
-function selectSubject(id){
-  curSubject=null;
-  for(var i=0;i<SUBJECTS.length;i++){if(SUBJECTS[i].id===id){curSubject=SUBJECTS[i];break;}}
-  curTopic=null;curTab='upload';
+function selectSubject(id) {
+  currentSubject = SUBJECTS.find(s => s.id === id);
+  currentTopic = null;
   renderSidebar();
   renderSubjectView();
 }
 
-function safeLen(str,key){
-  try{return JSON.parse(str||'[]').length;}catch(e){return 0;}
+function renderSubjectView() {
+  const topics = allTopics.filter(t => t.subject === currentSubject.id);
+  const main = document.getElementById('mainContent');
+  main.innerHTML = `
+    <div class="page-header">
+      <h2>${currentSubject.icon} ${currentSubject.name}</h2>
+      <p>Your study topics for ${currentSubject.name}</p>
+    </div>
+    <div class="topics-grid">
+      ${topics.map((t,i) => `
+        <div class="topic-card ${t.status==='completed'?'completed':''}" onclick="openTopic('${t.id}')">
+          <div class="topic-num">Topic ${i+1}</div>
+          <div class="topic-name">${t.topic_name}</div>
+          <div class="topic-tags">
+            ${t.notes ? '<span class="topic-tag done">Notes</span>' : ''}
+            ${t.flashcards && JSON.parse(t.flashcards||'[]').length ? `<span class="topic-tag done">${JSON.parse(t.flashcards).length} cards</span>` : ''}
+            ${t.quiz && JSON.parse(t.quiz||'[]').length ? `<span class="topic-tag done">${JSON.parse(t.quiz).length} Qs</span>` : ''}
+            ${!t.notes ? '<span class="topic-tag">Upload pages</span>' : ''}
+          </div>
+        </div>`).join('')}
+      <div class="new-topic-card" onclick="openNewTopicModal()">
+        <div style="font-size:24px">+</div>
+        <span>New Topic</span>
+      </div>
+    </div>`;
 }
 
-function renderSubjectView(){
-  var topics=[];
-  for(var i=0;i<allTopics.length;i++){if(allTopics[i].subject===curSubject.id)topics.push(allTopics[i]);}
-  var html='<div class="page-hdr"><h2>'+curSubject.icon+' '+curSubject.name+'</h2><p>Your study topics</p></div><div class="grid">';
-  for(var i=0;i<topics.length;i++){
-    var t=topics[i];
-    var fc=safeLen(t.flashcards);var qz=safeLen(t.quiz);
-    html+='<div class="topic-card '+(t.status==='completed'?'done':'')+'" onclick="openTopic(\''+t.id+'\')">';
-    html+='<div class="tc-num">Topic '+(i+1)+'</div><div class="tc-name">'+t.topic_name+'</div><div class="tc-tags">';
-    if(t.notes)html+='<span class="tc-tag done">Notes</span>';
-    if(fc)html+='<span class="tc-tag done">'+fc+' cards</span>';
-    if(qz)html+='<span class="tc-tag done">'+qz+' Qs</span>';
-    if(!t.notes)html+='<span class="tc-tag">Upload pages</span>';
-    html+='</div></div>';
-  }
-  html+='<div class="new-card" onclick="openNewTopicModal()"><div style="font-size:28px;color:#ccc">+</div><span>New Topic</span></div>';
-  html+='</div>';
-  document.getElementById('mainContent').innerHTML=html;
-}
-
-function openTopic(id){
-  for(var i=0;i<allTopics.length;i++){if(allTopics[i].id===id){curTopic=allTopics[i];break;}}
-  uploadedImages=[];quizAnswered=0;quizScore=0;curTab='upload';
-  sbPost('access_logs',{user_id:user.id,action:'view',subject:curSubject.name,topic:curTopic.topic_name});
+async function openTopic(id) {
+  currentTopic = allTopics.find(t => t.id === id);
+  uploadedImages = [];
+  quizAnswered = 0; quizScore = 0;
+  await supabase.from('access_logs').insert({ user_id: user.id, action: 'view', subject: currentSubject.name, topic: currentTopic.topic_name });
   renderTopicView();
 }
 
-function renderTopicView(){
-  var t=curTopic;
-  var fc=safeLen(t.flashcards);var qz=safeLen(t.quiz);
-  var html='<button class="back-btn" onclick="selectSubject(\''+curSubject.id+'\')">← Back to '+curSubject.name+'</button>';
-  html+='<div class="topic-hdr"><div style="font-size:12px;color:#1D9E75;font-weight:500;margin-bottom:4px">'+curSubject.name+'</div>';
-  html+='<h2>'+t.topic_name+'</h2><p>'+(t.page_count||0)+' pages uploaded · '+(t.status==='completed'?'Completed':'In Progress')+'</p>';
-  html+='<div class="badges">';
-  if(t.notes)html+='<span class="tbadge">Notes ready</span>';
-  if(fc)html+='<span class="tbadge">'+fc+' flashcards</span>';
-  if(qz)html+='<span class="tbadge">'+qz+' quiz questions</span>';
-  html+='</div></div>';
-  html+='<div class="tabs">';
-  var tabs=['upload','notes','flash','quiz','sim'];
-  var tabNames=['Upload','Notes','Flashcards','Quiz','Simulation'];
-  for(var i=0;i<tabs.length;i++){
-    html+='<button class="tab '+(curTab===tabs[i]?'active':'')+'" onclick="switchTab(\''+tabs[i]+'\')">'+tabNames[i]+'</button>';
-  }
-  html+='</div><div class="tab-content" id="tabContent"></div>';
-  document.getElementById('mainContent').innerHTML=html;
+function renderTopicView() {
+  const t = currentTopic;
+  const flashcards = JSON.parse(t.flashcards || '[]');
+  const quiz = JSON.parse(t.quiz || '[]');
+  const main = document.getElementById('mainContent');
+  
+  main.innerHTML = `
+    <button class="back-btn" onclick="selectSubject('${currentSubject.id}')">← Back to ${currentSubject.name}</button>
+    <div class="topic-header">
+      <div style="font-size:12px;color:#1D9E75;font-weight:500;margin-bottom:4px">${currentSubject.name}</div>
+      <h2>${t.topic_name}</h2>
+      <p>${t.page_count} pages uploaded · ${t.status === 'completed' ? 'Completed' : 'In Progress'}</p>
+      <div class="topic-badges">
+        ${t.notes ? '<span class="topic-badge">Notes ready</span>' : ''}
+        ${flashcards.length ? `<span class="topic-badge">${flashcards.length} flashcards</span>` : ''}
+        ${quiz.length ? `<span class="topic-badge">${quiz.length} quiz questions</span>` : ''}
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab ${currentTab==='upload'?'active':''}" onclick="switchTab('upload')">Upload Pages</button>
+      <button class="tab ${currentTab==='notes'?'active':''}" onclick="switchTab('notes')">Notes</button>
+      <button class="tab ${currentTab==='flash'?'active':''}" onclick="switchTab('flash')">Flashcards</button>
+      <button class="tab ${currentTab==='quiz'?'active':''}" onclick="switchTab('quiz')">Quiz</button>
+      <button class="tab ${currentTab==='sim'?'active':''}" onclick="switchTab('sim')">Simulation</button>
+    </div>
+    <div class="tab-content" id="tabContent"></div>`;
+  
   renderTab();
 }
 
-function switchTab(tab){
-  curTab=tab;
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.textContent.toLowerCase().replace(' ','') === tab || (tab==='flash' && t.textContent==='Flashcards') || (tab==='sim' && t.textContent==='Simulation') || (tab==='upload' && t.textContent==='Upload Pages')));
+  renderTab();
+}
+
+function renderTab() {
+  const tc = document.getElementById('tabContent');
+  if(!tc) return;
+  const t = currentTopic;
+  const flashcards = JSON.parse(t.flashcards || '[]');
+  const quiz = JSON.parse(t.quiz || '[]');
+
+  if(currentTab === 'upload') {
+    tc.innerHTML = `
+      <div class="page-counter">📄 ${t.page_count} pages uploaded so far</div>
+      <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()" ondragover="dragOver(event)" ondrop="dropFiles(event)">
+        <input type="file" id="fileInput" multiple accept="image/*" onchange="handleFiles(this.files)">
+        <div class="upload-icon">📸</div>
+        <div class="upload-text">Take photos or upload images</div>
+        <div class="upload-sub">Upload 2 pages at a time · JPG, PNG supported</div>
+      </div>
+      <div class="uploaded-files" id="uploadedFiles"></div>
+      ${uploadedImages.length > 0 ? `
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-secondary" onclick="uploadPages()" style="flex:1">Add These Pages to Notes</button>
+        </div>` : ''}
+      ${t.raw_content ? `
+        <button class="btn btn-finish" onclick="finishChapter()" ${!claudeKey?'disabled title="Enter API key first"':''}>
+          ✨ Finish Chapter — Generate Notes, Flashcards, Quiz & Simulation
+        </button>
+        <div style="font-size:12px;color:#999;text-align:center;margin-top:8px">This will generate all study materials from your ${t.page_count} uploaded pages</div>` : ''}
+      <div class="progress-bar"><div class="progress-fill" id="uploadProgress" style="width:0%"></div></div>
+      <div class="status-msg" id="uploadStatus"></div>`;
+  } else if(currentTab === 'notes') {
+    if(t.notes) {
+      tc.innerHTML = `<div class="notes-content">${t.notes}</div>`;
+    } else {
+      tc.innerHTML = `<div class="empty-state"><div class="empty-icon">📝</div><div class="empty-title">No notes yet</div><div class="empty-sub">Upload your textbook pages and click "Finish Chapter" to generate detailed notes.</div></div>`;
+    }
+  } else if(currentTab === 'flash') {
+    if(flashcards.length) {
+      tc.innerHTML = `<div style="font-size:12px;color:#666;margin-bottom:12px">Tap any card to reveal the answer · ${flashcards.length} cards total</div>
+        <div class="fc-grid">${flashcards.map((f,i)=>`
+          <div class="fc" id="fc${i}" onclick="this.classList.toggle('flipped')">
+            <div class="fc-q">${f.q}</div>
+            <div class="fc-a">${f.a}</div>
+            <div class="fc-hint">tap to reveal</div>
+          </div>`).join('')}</div>`;
+    } else {
+      tc.innerHTML = `<div class="empty-state"><div class="empty-icon">🃏</div><div class="empty-title">No flashcards yet</div><div class="empty-sub">Flashcards will be generated when you finish the chapter.</div></div>`;
+    }
+  } else if(currentTab === 'quiz') {
+    if(quiz.length) {
+      tc.innerHTML = `
+        <div class="score-banner" id="scoreBanner" style="display:none">
+          <h3 id="scoreText">0/${quiz.length}</h3>
+          <p id="scoreMsg"></p>
+        </div>
+        ${quiz.map((q,qi)=>`
+          <div class="quiz-item">
+            <div class="quiz-q">Q${qi+1}. ${q.q}</div>
+            <div class="quiz-opts">${q.opts.map((o,oi)=>`
+              <button class="quiz-opt" id="qo_${qi}_${oi}" onclick="answerQuiz(${qi},${oi},${q.ans})">${String.fromCharCode(65+oi)}. ${o}</button>`).join('')}</div>
+            <div class="quiz-exp" id="qexp_${qi}">${q.exp||''}</div>
+          </div>`).join('')}
+        <button class="btn btn-secondary" onclick="resetQuiz()" style="margin-top:8px">Reset Quiz</button>`;
+      quizAnswered = 0; quizScore = 0;
+    } else {
+      tc.innerHTML = `<div class="empty-state"><div class="empty-icon">❓</div><div class="empty-title">No quiz yet</div><div class="empty-sub">Quiz questions will be generated when you finish the chapter.</div></div>`;
+    }
+  } else if(currentTab === 'sim') {
+    if(t.simulation) {
+      tc.innerHTML = `<div id="simContainer">${t.simulation}</div>`;
+      const scripts = tc.querySelectorAll('script');
+      scripts.forEach(s => { const ns = document.createElement('script'); ns.textContent = s.textContent; s.parentNode.replaceChild(ns, s); });
+    } else {
+      tc.innerHTML = `<div class="empty-state"><div class="empty-icon">🔬</div><div class="empty-title">No simulation yet</div><div class="empty-sub">An interactive simulation will be generated when you finish the chapter.</div></div>`;
+    }
+  }
+}
+
+function answerQuiz(qi, oi, ans) {
+  for(let i=0;i<6;i++){
+    const el=document.getElementById(`qo_${qi}_${i}`);
+    if(!el)break;
+    if(i===ans)el.classList.add('correct');
+    else if(i===oi&&oi!==ans)el.classList.add('wrong');
+    el.disabled=true;
+  }
+  const exp=document.getElementById(`qexp_${qi}`);
+  if(exp)exp.style.display='block';
+  quizAnswered++;
+  if(oi===ans)quizScore++;
+  const quiz = JSON.parse(currentTopic.quiz||'[]');
+  if(quizAnswered===quiz.length){
+    const banner=document.getElementById('scoreBanner');
+    if(banner){
+      banner.style.display='block';
+      document.getElementById('scoreText').textContent=`${quizScore}/${quiz.length}`;
+      const pct=Math.round(quizScore/quiz.length*100);
+      document.getElementById('scoreMsg').textContent=pct>=80?'Excellent work! 🎉':pct>=60?'Good job! Keep studying 📚':'Review the notes and try again 💪';
+    }
+  }
+}
+
+function resetQuiz() { quizAnswered=0; quizScore=0; renderTab(); }
+
+function handleFiles(files) {
+  Array.from(files).forEach(f => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      uploadedImages.push({ file: f, dataUrl: e.target.result });
+      renderUploadedFiles();
+    };
+    reader.readAsDataURL(f);
+  });
+}
+
+function dragOver(e) { e.preventDefault(); document.getElementById('uploadArea').classList.add('dragover'); }
+function dropFiles(e) {
+  e.preventDefault();
+  document.getElementById('uploadArea').classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+}
+
+function renderUploadedFiles() {
+  const c = document.getElementById('uploadedFiles');
+  if(!c) return;
+  c.innerHTML = uploadedImages.map((img,i) => `
+    <div class="file-thumb">
+      <img src="${img.dataUrl}" alt="Page ${i+1}">
+      <div>Page ${i+1}</div>
+      <button class="file-remove" onclick="removeImage(${i})">×</button>
+    </div>`).join('');
+  renderTab();
+}
+
+function removeImage(i) {
+  uploadedImages.splice(i, 1);
+  renderUploadedFiles();
+}
+
+async function uploadPages() {
+  if(!claudeKey) { alert('Please enter your Claude API key first. Refresh the page to enter it.'); return; }
+  if(uploadedImages.length === 0) return;
+  
+  showLoading('Reading your pages...', 'Extracting text and content');
+  setProgress(10);
+  
+  try {
+    const imageContents = uploadedImages.map(img => ({
+      type: 'image',
+      source: { type: 'base64', media_type: img.file.type || 'image/jpeg', data: img.dataUrl.split(',')[1] }
+    }));
+    
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': claudeKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        messages: [{
+          role: 'user',
+          content: [
+            ...imageContents,
+            { type: 'text', text: `These are pages from an ICSE Grade 9 ${currentSubject.name} textbook, chapter on "${currentTopic.topic_name}". Extract ALL the text content, concepts, definitions, formulas, and examples from these pages. Return the raw extracted content in a structured way. Do not summarize — extract everything.` }
+          ]
+        }]
+      })
+    });
+    
+    const data = await response.json();
+    const extracted = data.content?.[0]?.text || '';
+    
+    setProgress(60);
+    
+    const newRaw = (currentTopic.raw_content || '') + '\n\n--- Pages ---\n' + extracted;
+    const newCount = (currentTopic.page_count || 0) + uploadedImages.length;
+    
+    await supabase.from('topics').update({ raw_content: newRaw, page_count: newCount, updated_at: new Date().toISOString() }).eq('id', currentTopic.id);
+    await supabase.from('access_logs').insert({ user_id: user.id, action: 'upload', subject: currentSubject.name, topic: currentTopic.topic_name });
+    
+    currentTopic.raw_content = newRaw;
+    currentTopic.page_count = newCount;
+    
+    const topicIdx = allTopics.findIndex(t => t.id === currentTopic.id);
+    if(topicIdx >= 0) { allTopics[topicIdx].raw_content = newRaw; allTopics[topicIdx].page_count = newCount; }
+    
+    setProgress(100);
+    uploadedImages = [];
+    hideLoading();
+    document.getElementById('uploadStatus').textContent = `✓ ${newCount} pages uploaded. Add more pages or click "Finish Chapter" to generate study materials.`;
+    renderTopicView();
+    
+  } catch(e) {
+    hideLoading();
+    document.getElementById('uploadStatus').textContent = 'Error: ' + e.message;
+  }
+}
+
+async function finishChapter() {
+  if(!claudeKey) { alert('Please enter your Claude API key first.'); return; }
+  if(!currentTopic.raw_content) { alert('Please upload some pages first.'); return; }
+  
+  showLoading('Generating your study materials...', 'This takes 30-60 seconds. Please wait.');
+  setProgress(5);
+  
+  try {
+    const prompt = `You are an expert ICSE Grade 9 ${currentSubject.name} teacher. Based on the following textbook content for the chapter "${currentTopic.topic_name}", generate comprehensive study materials.
+
+TEXTBOOK CONTENT:
+${currentTopic.raw_content}
+
+Generate the following in a single JSON response (no markdown, just valid JSON):
+{
+  "notes": "HTML string with detailed notes using these tags: <h3> for section titles, <p> for paragraphs, <ul><li> for lists, <div class='formula'> for formulas/equations, <div class='highlight'> for important definitions, <div class='mnemonic'> for memory tricks, <table><thead><tr><th><tbody><tr><td> for tables. Make notes detailed, clear and exam-focused.",
+  "flashcards": [{"q": "question", "a": "answer"}, ...] (minimum 10 cards covering all key concepts),
+  "quiz": [{"q": "question", "opts": ["A","B","C","D"], "ans": 0, "exp": "explanation"}, ...] (minimum 8 MCQ questions, ans is 0-indexed correct option),
+  "simulation": "Complete self-contained HTML string (no DOCTYPE/html/head/body tags) with an interactive simulation relevant to this topic. Include CSS in a style tag and JS in a script tag. Make it educational and interactive like PhET - use sliders, buttons, animations, canvas where appropriate. The simulation should visually demonstrate the key concept of this chapter."
+}
+
+Return ONLY valid JSON. No explanation text before or after.`;
+
+    setProgress(20);
+    
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': claudeKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 8000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    
+    setProgress(70);
+    const data = await response.json();
+    let raw = data.content?.[0]?.text || '';
+    raw = raw.replace(/```json/g,'').replace(/```/g,'').trim();
+    
+    let parsed;
+    try { parsed = JSON.parse(raw); }
+    catch(e) {
+      const match = raw.match(/\{[\s\S]*\}/);
+      if(match) parsed = JSON.parse(match[0]);
+      else throw new Error('Could not parse AI response');
+    }
+    
+    setProgress(90);
+    
+    await supabase.from('topics').update({
+      notes: parsed.notes || '',
+      flashcards: JSON.stringify(parsed.flashcards || []),
+      quiz: JSON.stringify(parsed.quiz || []),
+      simulation: parsed.simulation || '',
+      status: 'completed',
+      updated_at: new Date().toISOString()
+    }).eq('id', currentTopic.id);
+    
+    await supabase.from('access_logs').insert({ user_id: user.id, action: 'finish', subject: currentSubject.name, topic: currentTopic.topic_name });
+    
+    currentTopic.notes = parsed.notes || '';
+    currentTopic.flashcards = JSON.stringify(parsed.flashcards || []);
+    currentTopic.quiz = JSON.stringify(parsed.quiz || []);
+    currentTopic.simulation = parsed.simulation || '';
+    currentTopic.status = 'completed';
+    
+    const topicIdx = allTopics.findIndex(t => t.id === currentTopic.id);
+    if(topicIdx >= 0) Object.assign(allTopics[topicIdx], currentTopic);
+    
+    setProgress(100);
+    hideLoading();
+    currentTab = 'notes';
+    renderTopicView();
+    
+  } catch(e) {
+    hideLoading();
+    alert('Error generating content: ' + e.message + '\n\nPlease check your API key and try again.');
+  }
+}
+
+function openNewTopicModal() { document.getElementById('newTopicModal').classList.add('show'); }
+function closeNewTopicModal() { document.getElementById('newTopicModal').classList.remove('show'); }
+
+async function createTopic() {
+  const name = document.getElementById('newTopicName').value.trim();
+  if(!name) { alert('Please enter a topic name'); return; }
+  
+  const { data, error } = await supabase.from('topics').insert({
+    user_id: user.id, subject: currentSubject.id, topic_name: name
+  }).select().single();
+  
+  if(error) { alert('Error creating topic: ' + error.message); return; }
+  
+  allTopics.push(data);
+  closeNewTopicModal();
+  document.getElementById('newTopicName').value = '';
+  currentTopic = data;
+  currentTab = 'upload';
+  renderSidebar();
   renderTopicView();
 }
 
-function renderTab(){
-  var tc=document.getElementById('tabContent');
-  if(!tc)return;
-  var t=curTopic;
-  var flashcards=[];var quiz=[];
-  try{flashcards=JSON.parse(t.flashcards||'[]');}catch(e){}
-  try{quiz=JSON.parse(t.quiz||'[]');}catch(e){}
-
-  if(curTab==='upload'){
-    var savedNotes=t.notes||'';
-    var html='<div style="margin-bottom:10px">';
-    html+='<p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:8px">Paste your chapter notes below, then click the button to auto-generate flashcards, quiz and simulation.</p>';
-    html+='<textarea id="notesInput" style="width:100%;min-height:240px;padding:12px;border:1px solid;border-color:var(--color-border-secondary);border-radius:8px;font-size:13px;color:var(--color-text-primary);background:var(--color-background-primary);line-height:1.6;resize:vertical" placeholder="Paste your detailed chapter notes here...">'+savedNotes+'</textarea>';
-    html+='</div>';
-    html+='<button class="btn-dark" onclick="saveAndGenerate()">Generate Flashcards, Quiz and Simulation from Notes</button>';
-    html+='<div class="status-msg" id="statusMsg"></div>';
-    tc.innerHTML=html;
-} else if(curTab==='notes'){
-    tc.innerHTML=t.notes?('<div class="notes-content">'+t.notes+'</div>'):'<div class="empty"><div class="empty-icon">📝</div><div class="empty-title">No notes yet</div><div class="empty-sub">Upload pages then click Finish Chapter.</div></div>';
-  } else if(curTab==='flash'){
-    if(flashcards.length){
-      var html='<div style="font-size:12px;color:#666;margin-bottom:12px">Tap to flip · '+flashcards.length+' cards</div><div class="fc-grid">';
-      for(var i=0;i<flashcards.length;i++){
-        html+='<div class="fc" id="fc'+i+'" onclick="this.classList.toggle(\'flipped\')"><div class="fc-q">'+flashcards[i].q+'</div><div class="fc-a">'+flashcards[i].a+'</div><div class="fc-hint">tap to reveal</div></div>';
-      }
-      tc.innerHTML=html+'</div>';
-    } else {
-      tc.innerHTML='<div class="empty"><div class="empty-icon">🃏</div><div class="empty-title">No flashcards yet</div><div class="empty-sub">Generated when you finish the chapter.</div></div>';
-    }
-  } else if(curTab==='quiz'){
-    if(quiz.length){
-      quizAnswered=0;quizScore=0;
-      var html='<div class="score-banner" id="scoreBanner" style="display:none"><h3 id="scoreText"></h3><p id="scoreMsg"></p></div>';
-      for(var i=0;i<quiz.length;i++){
-        var q=quiz[i];
-        html+='<div class="quiz-item"><div class="quiz-q">Q'+(i+1)+'. '+q.q+'</div><div class="quiz-opts">';
-        for(var j=0;j<q.opts.length;j++){
-          html+='<button class="quiz-opt" id="qo_'+i+'_'+j+'" onclick="answerQuiz('+i+','+j+','+q.ans+')">'+String.fromCharCode(65+j)+'. '+q.opts[j]+'</button>';
-        }
-        html+='</div><div class="quiz-exp" id="qexp_'+i+'">'+(q.exp||'')+'</div></div>';
-      }
-      html+='<button class="btn-sec" onclick="switchTab(\'quiz\')" style="margin-top:8px">Reset Quiz</button>';
-      tc.innerHTML=html;
-    } else {
-      tc.innerHTML='<div class="empty"><div class="empty-icon">❓</div><div class="empty-title">No quiz yet</div><div class="empty-sub">Generated when you finish the chapter.</div></div>';
-    }
-  } else if(curTab==='sim'){
-    if(t.simulation){
-      var simData=null;
-      try{simData=JSON.parse(t.simulation);}catch(e){simData=null;}
-      if(simData&&Array.isArray(simData.sections)){
-        // Render tab buttons
-        var simHtml='<div style="margin-bottom:12px"><h3 style="font-size:15px;font-weight:600;margin-bottom:2px">'+simData.title+'</h3>';
-        simHtml+='<p style="font-size:12px;color:#666">'+simData.sections.length+' interactive sections — click a tab</p></div>';
-        simHtml+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px" id="simTabBar">';
-        for(var si=0;si<simData.sections.length;si++){
-          simHtml+='<button onclick="switchSimTab('+si+')" id="simTab'+si+'" style="padding:7px 14px;border-radius:8px;border:1.5px solid '+(si===0?'#1D9E75':'#ddd')+';background:'+(si===0?'#1D9E75':'#fff')+';color:'+(si===0?'#fff':'#333')+';font-size:13px;cursor:pointer;font-family:inherit;font-weight:'+(si===0?'600':'400')+'">'+simData.sections[si].title+'</button>';
-        }
-        simHtml+='</div>';
-        // One iframe placeholder — we swap srcdoc on tab click
-        simHtml+='<iframe id="simFrame" style="width:100%;height:480px;border:1px solid #e5e5e0;border-radius:10px;background:#fff" sandbox="allow-scripts"></iframe>';
-        tc.innerHTML=simHtml;
-
-        // Store sections on window so switchSimTab can reach them
-        window._simSections=simData.sections;
-
-        window.switchSimTab=function(idx){
-          for(var k=0;k<window._simSections.length;k++){
-            var tb=document.getElementById('simTab'+k);
-            if(tb){
-              tb.style.background=k===idx?'#1D9E75':'#fff';
-              tb.style.color=k===idx?'#fff':'#333';
-              tb.style.borderColor=k===idx?'#1D9E75':'#ddd';
-              tb.style.fontWeight=k===idx?'600':'400';
-            }
-          }
-          var frame=document.getElementById('simFrame');
-          if(frame){
-            var fullDoc='<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#fff;padding:12px}</style></head><body>'+window._simSections[idx].html+'</body></html>';
-            frame.srcdoc=fullDoc;
-          }
-        };
-
-        // Load first tab
-        window.switchSimTab(0);
-
-      } else {
-        // Plain HTML simulation — render directly in iframe
-        var frame=document.createElement('iframe');
-        frame.style.cssText='width:100%;height:520px;border:none;border-radius:10px';
-        frame.setAttribute('sandbox','allow-scripts allow-same-origin');
-        // If it's a full HTML doc use as-is, otherwise wrap it
-        var simHTML=t.simulation.trim();
-        var fullDoc=simHTML.startsWith('<!DOCTYPE') || simHTML.startsWith('<html')
-          ? simHTML
-          : '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#fff}</style></head><body>'+simHTML+'</body></html>';
-        frame.srcdoc=fullDoc;
-        tc.innerHTML='';
-        tc.appendChild(frame);
-      }
-    } else {
-      tc.innerHTML='<div class="empty"><div class="empty-icon">🔬</div><div class="empty-title">No simulation yet</div><div class="empty-sub">Generated when you finish the chapter.</div></div>';
-    }
-  }
+function showLoading(text, sub) {
+  document.getElementById('loadingText').textContent = text;
+  document.getElementById('loadingSub').textContent = sub;
+  document.getElementById('loadingOverlay').classList.add('show');
 }
 
-function answerQuiz(qi,oi,ans){
-  for(var i=0;i<6;i++){var el=document.getElementById('qo_'+qi+'_'+i);if(!el)break;if(i===ans)el.classList.add('correct');else if(i===oi&&oi!==ans)el.classList.add('wrong');el.disabled=true;}
-  var exp=document.getElementById('qexp_'+qi);if(exp)exp.style.display='block';
-  quizAnswered++;if(oi===ans)quizScore++;
-  var quiz=[];try{quiz=JSON.parse(curTopic.quiz||'[]');}catch(e){}
-  if(quizAnswered===quiz.length){
-    var b=document.getElementById('scoreBanner');
-    if(b){b.style.display='block';document.getElementById('scoreText').textContent=quizScore+'/'+quiz.length;var pct=Math.round(quizScore/quiz.length*100);document.getElementById('scoreMsg').textContent=pct>=80?'Excellent! 🎉':pct>=60?'Good job! 📚':'Review notes and try again 💪';}
-  }
+function hideLoading() { document.getElementById('loadingOverlay').classList.remove('show'); }
+
+function setProgress(pct) {
+  const el = document.getElementById('uploadProgress');
+  if(el) el.style.width = pct + '%';
 }
 
-function handleFiles(files){
-  Array.from(files).forEach(function(f){
-    if(f.type==='application/pdf'||f.name.toLowerCase().endsWith('.pdf')){
-      handlePDF(f);
-    } else {
-      var r=new FileReader();
-      r.onload=function(e){uploadedImages.push({file:f,dataUrl:e.target.result});renderThumbs();};
-      r.readAsDataURL(f);
-    }
-  });
-}
-
-async function handlePDF(file){
-  showLoading('Converting PDF pages to images...','This may take a few seconds');
-  try{
-    // Load PDF.js
-    if(!window.pdfjsLib){
-      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    }
-    var arrayBuffer=await file.arrayBuffer();
-    var pdf=await window.pdfjsLib.getDocument({data:arrayBuffer}).promise;
-    var numPages=pdf.numPages;
-    for(var i=1;i<=numPages;i++){
-      var page=await pdf.getPage(i);
-      var viewport=page.getViewport({scale:1.5});
-      var canvas=document.createElement('canvas');
-      canvas.width=viewport.width;canvas.height=viewport.height;
-      var ctx=canvas.getContext('2d');
-      await page.render({canvasContext:ctx,viewport:viewport}).promise;
-      var dataUrl=canvas.toDataURL('image/jpeg',0.85);
-      uploadedImages.push({file:{name:'page_'+i+'.jpg',type:'image/jpeg'},dataUrl:dataUrl});
-    }
-    hideLoading();
-    renderThumbs();
-    document.getElementById('statusMsg').textContent='✓ '+numPages+' PDF pages converted to images!';
-  }catch(e){hideLoading();alert('PDF error: '+e.message);}
-}
-
-function loadScript(src){
-  return new Promise(function(resolve,reject){
-    var s=document.createElement('script');s.src=src;
-    s.onload=resolve;s.onerror=reject;
-    document.head.appendChild(s);
-  });
-}
-
-function renderThumbs(){
-  var c=document.getElementById('thumbsArea');if(!c)return;
-  var html='';
-  for(var i=0;i<uploadedImages.length;i++){
-    html+='<div class="thumb"><img src="'+uploadedImages[i].dataUrl+'"><div>Page '+(i+1)+'</div><button class="thumb-rm" onclick="removeImg('+i+')">×</button></div>';
-  }
-  c.innerHTML=html;
-  renderUploadBtns();
-}
-
-function removeImg(i){uploadedImages.splice(i,1);renderThumbs();}
-
-function renderUploadBtns(){
-  var c=document.getElementById('uploadBtns');if(!c)return;
-  var html='';
-  if(uploadedImages.length>0){
-    html+='<button class="btn-primary" onclick="uploadPages()">Add '+uploadedImages.length+' Page'+(uploadedImages.length!==1?'s':'')+' to Topic</button>';
-  }
-  if(curTopic.page_count>0){
-    html+='<button class="btn-dark" onclick="finishChapter()">✨ Finish Chapter — Generate Notes, Flashcards, Quiz & Simulation</button>';
-    html+='<div style="font-size:12px;color:#999;text-align:center;margin-top:6px">'+curTopic.page_count+' pages ready to process</div>';
-  }
-  c.innerHTML=html;
-}
-
-async function saveAndGenerate(){
-  var notesEl=document.getElementById('notesInput');
-  if(!notesEl){alert('Please open the Upload tab first.');return;}
-  var notesText=notesEl.value.trim();
-  if(!notesText){alert('Please paste your chapter notes first.');return;}
-  var key=getKey();
-  if(!key){alert('Claude API key required.');return;}
-
-  var statusEl=document.getElementById('statusMsg');
-  if(statusEl)statusEl.textContent='Saving notes...';
-
-  await sbPatch('topics','id=eq.'+curTopic.id,{notes:notesText,updated_at:new Date().toISOString()});
-  curTopic.notes=notesText;
-  for(var i=0;i<allTopics.length;i++){if(allTopics[i].id===curTopic.id){allTopics[i].notes=notesText;break;}}
-
-  showLoading('Generating flashcards and quiz...','Reading your notes — about 15 seconds');
-  try{
-    var p1txt='You are an ICSE Grade 9 teacher for '+curSubject.name+'. ';
-    p1txt+='Generate study materials for the chapter: '+curTopic.topic_name+'. ';
-    p1txt+='Based on these notes: '+notesText.slice(0,5000)+'. ';
-    p1txt+='Return ONLY valid JSON with two keys: ';
-    p1txt+='"flashcards" (array of objects with q and a string fields, minimum 15 items) and ';
-    p1txt+='"quiz" (array of objects with q string, opts array of 4 strings, ans integer 0-3, exp string, minimum 10 items). ';
-    p1txt+='No other text, just the JSON.';
-
-    var d1=await callClaude({model:'claude-sonnet-4-5',max_tokens:4000,messages:[{role:'user',content:p1txt}]});
-    var raw1=d1.content&&d1.content[0]?d1.content[0].text:'';
-    var bt=String.fromCharCode(96);
-    raw1=raw1.replace(new RegExp(bt+bt+bt+'json','g'),'').replace(new RegExp(bt+bt+bt,'g'),'').trim();
-    var p1=null;
-    try{p1=JSON.parse(raw1);}catch(e){var m=raw1.match(/\{[\s\S]*\}/);if(m){try{p1=JSON.parse(m[0]);}catch(e2){}}}
-    if(!p1){throw new Error('Could not generate flashcards. Please try again.');}
-
-    await sbPatch('topics','id=eq.'+curTopic.id,{flashcards:JSON.stringify(p1.flashcards||[]),quiz:JSON.stringify(p1.quiz||[]),updated_at:new Date().toISOString()});
-    curTopic.flashcards=JSON.stringify(p1.flashcards||[]);
-    curTopic.quiz=JSON.stringify(p1.quiz||[]);
-    for(var i=0;i<allTopics.length;i++){if(allTopics[i].id===curTopic.id){allTopics[i].flashcards=curTopic.flashcards;allTopics[i].quiz=curTopic.quiz;break;}}
-
-    // Step 2: Identify sections from notes for simulation
-    showLoading('Analysing chapter sections...','Finding key concepts to simulate');
-    var sectionPrompt='You are an ICSE Grade 9 '+curSubject.name+' teacher. Read these notes for the chapter "'+curTopic.topic_name+'" and identify 2-4 major sections or concepts that can each be shown as an interactive simulation. ';
-    sectionPrompt+='Notes: '+notesText.slice(0,3000)+'. ';
-    sectionPrompt+='Return ONLY valid JSON: {"sections":[{"title":"short section name","concept":"one sentence describing what to simulate"}]}. No explanation, just JSON.';
-
-    var dSec=await callClaude({model:'claude-sonnet-4-5',max_tokens:800,messages:[{role:'user',content:sectionPrompt}]});
-    var rawSec=dSec.content&&dSec.content[0]?dSec.content[0].text:'';
-    var bt2=String.fromCharCode(96);
-    rawSec=rawSec.replace(new RegExp(bt2+bt2+bt2+'json','g'),'').replace(new RegExp(bt2+bt2+bt2,'g'),'').trim();
-    var secData=null;
-    try{secData=JSON.parse(rawSec);}catch(e){var mm=rawSec.match(/\{[\s\S]*\}/);if(mm){try{secData=JSON.parse(mm[0]);}catch(e2){}}}
-    var sections=(secData&&Array.isArray(secData.sections))?secData.sections:[{title:curTopic.topic_name,concept:'Interactive overview of the main concepts'}];
-
-    // Step 3: Generate one simulation HTML per section
-    var simSections=[];
-    for(var si=0;si<sections.length;si++){
-      showLoading('Building simulation '+(si+1)+' of '+sections.length+'...','Creating: '+sections[si].title);
-      var simNote=notesText.slice(0,2500);
-      var sp='You are creating ONE fully interactive HTML simulation for an ICSE Grade 9 student. It will run inside an iframe with full HTML document context.\n\n';
-      sp+='Subject: '+curSubject.name+'\nChapter: '+curTopic.topic_name+'\nSection: '+sections[si].title+'\nConcept: '+sections[si].concept+'\n\n';
-      sp+='STRICT RULES:\n';
-      sp+='1. Output ONLY the content that goes inside <body> — no DOCTYPE, no <html>, no <head>, no <body> tags, no markdown.\n';
-      sp+='2. Include one <style> block for all CSS. Use simple color scheme: background #fff, accent #1D9E75.\n';
-      sp+='3. Include one <script> block at the very end with ALL JavaScript.\n';
-      sp+='4. EVERY button, slider, and clickable element MUST have a working addEventListener or onclick that visibly changes something on screen.\n';
-      sp+='5. Do NOT just show text explanations. The simulation must be VISUAL — use a canvas, SVG, or animated divs.\n';
-      sp+='6. Buttons must change what is drawn/shown. Sliders must update values visibly. Animations must run when triggered.\n';
-      sp+='7. No external libraries. No fetch calls. No localStorage. Pure HTML+CSS+JS only.\n';
-      sp+='8. Test mentally: if I click every button and move every slider, does something visually change? If not, rewrite.\n\n';
-      sp+='Notes for context:\n'+simNote.slice(0,1500)+'\n\n';
-      sp+='Now write the simulation. Start directly with <style> or a <div>:';
-
-      var dSim=await callClaude({model:'claude-sonnet-4-5',max_tokens:2500,messages:[{role:'user',content:sp}]});
-      var simHtml=dSim.content&&dSim.content[0]?dSim.content[0].text:'';
-      simHtml=simHtml.replace(new RegExp(bt2+bt2+bt2+'html','g'),'').replace(new RegExp(bt2+bt2+bt2,'g'),'').trim();
-      simSections.push({title:sections[si].title,html:simHtml});
-    }
-
-    var simObj=JSON.stringify({title:curTopic.topic_name+' — Interactive Simulations',sections:simSections});
-    await sbPatch('topics','id=eq.'+curTopic.id,{simulation:simObj,status:'completed',updated_at:new Date().toISOString()});
-    sbPost('access_logs',{user_id:user.id,action:'finish',subject:curSubject.name,topic:curTopic.topic_name});
-    curTopic.simulation=simObj;curTopic.status='completed';
-    for(var i=0;i<allTopics.length;i++){if(allTopics[i].id===curTopic.id){Object.assign(allTopics[i],curTopic);break;}}
-
-    hideLoading();curTab='notes';renderTopicView();
-  }catch(e){hideLoading();alert('Error: '+e.message);}
-}
-
-async function uploadPages(){return;}
-
-function convertToJpeg(dataUrl){
-  return new Promise(function(resolve){
-    var img=new Image();
-    img.onload=function(){
-      var canvas=document.createElement('canvas');
-      // Resize if too large - max 1500px on longest side
-      var maxSize=1500;
-      var w=img.width,h=img.height;
-      if(w>maxSize||h>maxSize){
-        if(w>h){h=Math.round(h*maxSize/w);w=maxSize;}
-        else{w=Math.round(w*maxSize/h);h=maxSize;}
-      }
-      canvas.width=w;canvas.height=h;
-      var ctx=canvas.getContext('2d');
-      ctx.fillStyle='#FFFFFF';
-      ctx.fillRect(0,0,w,h);
-      ctx.drawImage(img,0,0,w,h);
-      var jpeg=canvas.toDataURL('image/jpeg',0.85);
-      resolve(jpeg.split('base64,')[1]);
-    };
-    img.onerror=function(){resolve(null);};
-    img.src=dataUrl;
-  });
-}
-
-async function callClaude(payload){
-  var r=await fetch(WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({apiKey:getKey(),payload:payload})});
-  if(!r.ok)throw new Error('Server error: '+r.status);
-  return r.json();
-}
-
-function getKey(){
-  var k=localStorage.getItem('claude_api_key')||'';
-  if(!k){k=prompt('Enter your Claude API key:\n(Get from console.anthropic.com → API Keys)');if(k)localStorage.setItem('claude_api_key',k);}
-  return k;
-}
-
-async function finishChapter_old_disabled(){
-  if(!uploadedImages.length&&!(curTopic.page_count>0)){alert('Please upload some pages first.');return;}
-  if(!uploadedImages.length){alert('Your photos are not in memory. Please re-upload your pages and click Finish Chapter immediately after.');return;}
-  var key=getKey();
-  if(!key){alert('Claude API key required.');return;}
-
-  showLoading('Step 1/2: Generating notes from your photos...','Reading textbook pages directly — this takes ~30 seconds');
-  try{
-    // Convert images via canvas to ensure clean JPEG format
-    var imageContents=[];
-    for(var ii=0;ii<uploadedImages.length;ii++){
-      var cleanBase64=await convertToJpeg(uploadedImages[ii].dataUrl);
-      if(cleanBase64){
-        imageContents.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:cleanBase64}});
-      }
-    }
-    if(!imageContents.length){throw new Error('No valid images. Please upload your pages again.');}
-
-    var prompt = 'You are an expert ICSE Grade 9 ' + curSubject.name + ' teacher. These are photos of the textbook chapter "' + curTopic.topic_name + '". Generate comprehensive study notes.\n\nReturn ONLY valid JSON with these exact keys:\n{"notes":"detailed HTML using h3,p,ul,li,table,div class highlight,div class formula,div class mnemonic","flashcards":[{"q":"question","a":"answer"}],"quiz":[{"q":"question","opts":["A","B","C","D"],"ans":0,"exp":"explanation"}]}';
-
-    var msgContent=imageContents.concat([{type:'text',text:prompt}]);
-
-    var d1=await callClaude({model:'claude-sonnet-4-5',max_tokens:6000,messages:[{role:'user',content:msgContent}]});
-
-    var raw1=d1.content&&d1.content[0]?d1.content[0].text:'';
-    var bt=String.fromCharCode(96);raw1=raw1.replace(new RegExp(bt+bt+bt+'json','g'),'').replace(new RegExp(bt+bt+bt,'g'),'').trim();
-
-    var p1=null;
-    try{p1=JSON.parse(raw1);}catch(e){
-      var m=raw1.match(/\{[\s\S]*\}/);
-      if(m){try{p1=JSON.parse(m[0]);}catch(e2){}}
-    }
-    if(!p1||!p1.notes){
-      var errMsg='Could not generate notes.';
-      if(d1.error)errMsg='API Error: '+d1.error.message;
-      else if(raw1)errMsg='Parse failed. Response: '+raw1.slice(0,200);
-      throw new Error(errMsg);
-    }
-
-    await sbPatch('topics','id=eq.'+curTopic.id,{notes:p1.notes||'',flashcards:JSON.stringify(p1.flashcards||[]),quiz:JSON.stringify(p1.quiz||[]),status:'completed',updated_at:new Date().toISOString()});
-    curTopic.notes=p1.notes||'';curTopic.flashcards=JSON.stringify(p1.flashcards||[]);curTopic.quiz=JSON.stringify(p1.quiz||[]);curTopic.status='completed';
-    for(var i=0;i<allTopics.length;i++){if(allTopics[i].id===curTopic.id){Object.assign(allTopics[i],curTopic);break;}}
-
-    showLoading('Step 2/2: Building simulation...','Creating interactive learning tool');
-    var simPrompt='Create a short self-contained HTML simulation (no DOCTYPE/html/head/body) for ICSE Grade 9 '+curSubject.name+': "'+curTopic.topic_name+'". Use sliders/buttons. Include style and script tags. Return ONLY the HTML.';
-    var d2=await callClaude({model:'claude-haiku-4-5',max_tokens:2000,messages:[{role:'user',content:simPrompt}]});
-    var sim=d2.content&&d2.content[0]?d2.content[0].text:'';
-    var bt2=String.fromCharCode(96);sim=sim.replace(new RegExp(bt2+bt2+bt2+'html','g'),'').replace(new RegExp(bt2+bt2+bt2,'g'),'').trim();
-
-    await sbPatch('topics','id=eq.'+curTopic.id,{simulation:sim,updated_at:new Date().toISOString()});
-    sbPost('access_logs',{user_id:user.id,action:'finish',subject:curSubject.name,topic:curTopic.topic_name});
-    curTopic.simulation=sim;
-    for(var i=0;i<allTopics.length;i++){if(allTopics[i].id===curTopic.id){Object.assign(allTopics[i],curTopic);break;}}
-
-    hideLoading();curTab='notes';renderTopicView();
-  }catch(e){hideLoading();alert('Error: '+e.message);}
-}
-
-function openNewTopicModal(){document.getElementById('newTopicModal').classList.add('show');}
-function closeModal(){document.getElementById('newTopicModal').classList.remove('show');}
-
-async function createTopic(){
-  var name=document.getElementById('newTopicName').value.trim();
-  if(!name){alert('Please enter a topic name');return;}
-  var data=await sbPost('topics',{user_id:user.id,subject:curSubject.id,topic_name:name,raw_content:'[]',flashcards:'[]',quiz:'[]',simulation:'',status:'in_progress',page_count:0});
-  if(data&&data[0]){allTopics.push(data[0]);curTopic=data[0];curTab='upload';}
-  closeModal();document.getElementById('newTopicName').value='';
-  renderSidebar();renderTopicView();
-}
-
-function showLoading(t,s){document.getElementById('loadingText').textContent=t;document.getElementById('loadingSub').textContent=s;document.getElementById('loadingOverlay').classList.add('show');}
-function hideLoading(){document.getElementById('loadingOverlay').classList.remove('show');}
-function logout(){sessionStorage.clear();window.location.href='index.html';}
+function logout() { sessionStorage.clear(); window.location.href = 'index.html'; }
 
 loadTopics();
 </script>
