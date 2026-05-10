@@ -801,14 +801,10 @@ async function sendChat() {
     systemMsg += 'Answer ONLY based on these chapter notes: ' + notes.slice(0,4000);
     systemMsg += ' Keep answers concise (3-5 sentences max), student-friendly, and accurate. Include memory tricks if helpful.';
 
-    var msgs = [{role:'user',content:systemMsg+'
-
-Student question: '+msg}];
+    var msgs = [{role:'user',content:systemMsg+' Student question: '+msg}];
     if(chatHistory.length>2){
       msgs = chatHistory.slice(-4).map(function(m){return{role:m.role,content:m.content};});
-      msgs[0].content = systemMsg+'
-
-'+msgs[0].content;
+      msgs[0].content = systemMsg+' '+msgs[0].content;
     }
 
     var d = await callClaude({model:'claude-sonnet-4-5',max_tokens:600,messages:msgs});
