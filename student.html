@@ -807,55 +807,49 @@ async function generateMindMap(notes, topicName) {
 }
 
 function buildMindMapSVG(mm) {
-  var W=800, H=520, cx=W/2, cy=H/2, cr=60;
   var branches = mm.branches || [];
   var n = branches.length;
-  var svg = '<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:500px">';
-  // Center
-  svg += '<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+cr+'" ry="38" fill="#1D9E75"/>';
-  var centerWords = (mm.center||'').split(' ');
-  var cy1 = centerWords.length>2 ? cy-8 : cy;
-  for(var wi=0;wi<Math.min(centerWords.length,3);wi++){
-    svg += '<text x="'+cx+'" y="'+(cy1+wi*16)+'" text-anchor="middle" font-size="11" font-weight="bold" fill="#fff" font-family="sans-serif">'+centerWords[wi]+'</text>';
-  }
+
+  // Build as HTML cards instead of SVG for readability
+  var colors = ['#1D9E75','#2563EB','#DC2626','#D97706','#7C3AED','#059669','#0891B2','#DB2777'];
+  var html = '<div style="padding:4px">';
+
+  // Center title
+  html += '<div style="text-align:center;margin-bottom:24px">';
+  html += '<div style="display:inline-block;background:#1D9E75;color:#fff;padding:12px 28px;border-radius:50px;font-size:16px;font-weight:700;box-shadow:0 4px 12px rgba(29,158,117,0.3)">🧠 '+(mm.center||'Mind Map')+'</div>';
+  html += '</div>';
+
+  // Branches grid
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">';
 
   branches.forEach(function(b, i){
-    var angle = (i/n)*2*Math.PI - Math.PI/2;
-    var branchR = 200;
-    var bx = cx + Math.cos(angle)*branchR;
-    var by = cy + Math.sin(angle)*branchR;
-    var color = b.color || '#2563EB';
+    var color = b.color || colors[i % colors.length];
+    var nodes = b.nodes || [];
 
-    // Line to branch
-    svg += '<line x1="'+cx+'" y1="'+cy+'" x2="'+bx+'" y2="'+by+'" stroke="'+color+'" stroke-width="2.5" stroke-opacity="0.6"/>';
+    html += '<div style="background:#fff;border-radius:14px;border:2px solid '+color+';overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06)">';
 
-    // Branch node
-    var bw=100, bh=32;
-    svg += '<rect x="'+(bx-bw/2)+'" y="'+(by-bh/2)+'" width="'+bw+'" height="'+bh+'" rx="16" fill="'+color+'"/>';
-    svg += '<text x="'+bx+'" y="'+(by+5)+'" text-anchor="middle" font-size="11" font-weight="bold" fill="#fff" font-family="sans-serif">'+b.label+'</text>';
+    // Branch header
+    html += '<div style="background:'+color+';padding:12px 16px;display:flex;align-items:center;gap:8px">';
+    html += '<div style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.6)"></div>';
+    html += '<span style="color:#fff;font-size:14px;font-weight:700">'+b.label+'</span>';
+    html += '</div>';
 
     // Sub-nodes
-    var nodes = b.nodes || [];
-    nodes.slice(0,4).forEach(function(nd, j){
-      var subAngle = angle + (j - (nodes.length-1)/2)*0.45;
-      var subR = 120;
-      var sx = bx + Math.cos(subAngle)*subR;
-      var sy = by + Math.sin(subAngle)*subR;
-      // Keep within bounds
-      sx = Math.max(80, Math.min(W-80, sx));
-      sy = Math.max(20, Math.min(H-20, sy));
-
-      svg += '<line x1="'+bx+'" y1="'+by+'" x2="'+sx+'" y2="'+sy+'" stroke="'+color+'" stroke-width="1.2" stroke-opacity="0.4" stroke-dasharray="4,3"/>';
-
-      var sw = Math.min(130, nd.length*7+20);
-      svg += '<rect x="'+(sx-sw/2)+'" y="'+(sy-12)+'" width="'+sw+'" height="24" rx="6" fill="'+color+'" fill-opacity="0.12" stroke="'+color+'" stroke-width="1"/>';
-      var shortNd = nd.length>18 ? nd.slice(0,17)+'…' : nd;
-      svg += '<text x="'+sx+'" y="'+(sy+5)+'" text-anchor="middle" font-size="9" fill="'+color+'" font-family="sans-serif" font-weight="600">'+shortNd+'</text>';
+    html += '<div style="padding:12px 16px">';
+    nodes.slice(0,5).forEach(function(nd){
+      html += '<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid #f0f0ec">';
+      html += '<div style="width:6px;height:6px;border-radius:50%;background:'+color+';margin-top:5px;flex-shrink:0"></div>';
+      html += '<span style="font-size:13px;color:#333;line-height:1.5">'+nd+'</span>';
+      html += '</div>';
     });
+    html += '</div></div>';
   });
 
-  svg += '</svg>';
-  return '<div style="padding:8px;overflow-x:auto">'+svg+'<div style="font-size:11px;color:#888;text-align:center;margin-top:6px">Mind map auto-generated from your notes</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:11px;color:#aaa;text-align:center;margin-top:16px">🤖 Mind map auto-generated from your notes</div>';
+  html += '</div>';
+
+  return html;
 }
 
 // ── CHAT ──
