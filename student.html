@@ -260,8 +260,8 @@ function renderTopicView(){
   if(qz)html+='<span class="tbadge">'+qz+' quiz questions</span>';
   html+='</div></div>';
   html+='<div class="tabs">';
-  var tabs=['upload','notes','images','flash','quiz','mindmap','chat','sim'];
-  var tabNames=['Upload','Notes','Images','Flashcards','Quiz','Mind Map','Ask AI','Simulation'];
+  var tabs=['upload','notes','images','flash','quiz','mindmap','chat','sim','textbook'];
+  var tabNames=['Upload','Notes','Images','Flashcards','Quiz','Mind Map','Ask AI','Simulation','Textbook Qs'];
   for(var i=0;i<tabs.length;i++){
     html+='<button class="tab '+(curTab===tabs[i]?'active':'')+'" onclick="switchTab(\''+tabs[i]+'\')">'+tabNames[i]+'</button>';
   }
@@ -414,6 +414,17 @@ function renderTab(){
     } else {
       tc.innerHTML='<div id="mmWrap" style="width:100%;min-height:400px;display:flex;align-items:center;justify-content:center"><div style="font-size:13px;color:#888">⏳ Generating mind map...</div></div>';
       generateMindMap(t.notes, curTopic.topic_name);
+    }
+  } else if(curTab==='textbook'){
+    if(t.textbook_questions){
+      var frame=document.createElement('iframe');
+      frame.style.cssText='width:100%;height:600px;border:none;border-radius:10px';
+      frame.setAttribute('sandbox','allow-scripts allow-same-origin');
+      frame.srcdoc=t.textbook_questions;
+      tc.innerHTML='';
+      tc.appendChild(frame);
+    } else {
+      tc.innerHTML='<div class="empty"><div class="empty-icon">📖</div><div class="empty-title">No textbook questions yet</div><div class="empty-sub">Upload the solved exercises HTML via Supabase SQL to see them here.</div></div>';
     }
   } else if(curTab==='chat'){
     tc.innerHTML=`
