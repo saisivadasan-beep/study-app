@@ -585,17 +585,18 @@ async function saveAndGenerate(){
       var simNote=notesText.slice(0,2500);
       var sp='You are creating ONE fully interactive HTML simulation for an ICSE Grade 9 student. It will run inside an iframe with full HTML document context.\n\n';
       sp+='Subject: '+curSubject.name+'\nChapter: '+curTopic.topic_name+'\nSection: '+sections[si].title+'\nConcept: '+sections[si].concept+'\n\n';
-      sp+='STRICT RULES:\n';
-      sp+='1. Output ONLY the content that goes inside <body> — no DOCTYPE, no <html>, no <head>, no <body> tags, no markdown.\n';
-      sp+='2. Include one <style> block for all CSS. Use simple color scheme: background #fff, accent #1D9E75.\n';
-      sp+='3. Include one <script> block at the very end with ALL JavaScript.\n';
-      sp+='4. EVERY button, slider, and clickable element MUST have a working addEventListener or onclick that visibly changes something on screen.\n';
-      sp+='5. Do NOT just show text explanations. The simulation must be VISUAL — use a canvas, SVG, or animated divs.\n';
-      sp+='6. Buttons must change what is drawn/shown. Sliders must update values visibly. Animations must run when triggered.\n';
-      sp+='7. No external libraries. No fetch calls. No localStorage. Pure HTML+CSS+JS only.\n';
-      sp+='8. Test mentally: if I click every button and move every slider, does something visually change? If not, rewrite.\n\n';
+      sp+='RULES (follow exactly):\n';
+      sp+='1. Output ONLY what goes inside <body>. No DOCTYPE, no <html>, no <head>, no <body> tags, no markdown fences.\n';
+      sp+='2. Start with a <style> block. Use: background:#fff, accent colour #1D9E75, font-family:sans-serif.\n';
+      sp+='3. End with ONE <script> block containing ALL JavaScript. No inline onclick= attributes — use addEventListener instead.\n';
+      sp+='4. Give every HTML element a unique id. Use document.getElementById() to access them in the script.\n';
+      sp+='5. The simulation MUST be visual — use canvas drawings, SVG, or coloured animated divs. NO plain text walls.\n';
+      sp+='6. Every button click and slider change MUST visibly update something on screen immediately.\n';
+      sp+='7. Wrap ALL JS in: document.addEventListener("DOMContentLoaded", function() { ... });\n';
+      sp+='8. No external libraries. No fetch. No localStorage. Pure HTML+CSS+JS only.\n';
+      sp+='9. Test every interactive element mentally — if nothing changes visually when clicked, rewrite that part.\n\n';
       sp+='Notes for context:\n'+simNote.slice(0,1500)+'\n\n';
-      sp+='Now write the simulation. Start directly with <style> or a <div>:';
+      sp+='Now write the simulation (start with <style>):';
 
       var dSim=await callClaude({model:'claude-sonnet-4-5',max_tokens:2500,messages:[{role:'user',content:sp}]});
       var simHtml=dSim.content&&dSim.content[0]?dSim.content[0].text:'';
