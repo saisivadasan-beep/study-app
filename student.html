@@ -189,7 +189,7 @@ var curSubject=null,curTopic=null,curTab='upload',allTopics=[],uploadedImages=[]
 
 async function loadTopics(){
   try{
-    var data=await sbGet('topics','user_id=eq.'+user.id+'&select=*');
+    var data=await sbGet('topics','user_id=eq.'+user.id+'&select=id,user_id,subject,topic_name,status,page_count,flashcards,quiz,notes,images,simulation,updated_at');
     allTopics=Array.isArray(data)?data:[];
   }catch(e){allTopics=[];}
   renderSidebar();
@@ -241,10 +241,20 @@ function renderSubjectView(){
   document.getElementById('mainContent').innerHTML=html;
 }
 
-function openTopic(id){
+async function openTopic(id){
   for(var i=0;i<allTopics.length;i++){if(allTopics[i].id===id){curTopic=allTopics[i];break;}}
   uploadedImages=[];quizAnswered=0;quizScore=0;curTab='upload';
   sbPost('access_logs',{user_id:user.id,action:'view',subject:curSubject.name,topic:curTopic.topic_name});
+  // Lazy-load heavy columns (textbook_questions) only when topic is opened
+  if(curTopic.textbook_questions===undefined){
+    try{
+      var full=await sbGet('topics','id=eq.'+curTopic.id+'&select=textbook_questions');
+      if(full&&full[0]){
+        curTopic.textbook_questions=full[0].textbook_questions||null;
+        for(var i=0;i<allTopics.length;i++){if(allTopics[i].id===curTopic.id){allTopics[i].textbook_questions=curTopic.textbook_questions;break;}}
+      }
+    }catch(e){curTopic.textbook_questions=null;}
+  }
   renderTopicView();
 }
 
@@ -424,7 +434,7 @@ function renderTab(){
       tc.innerHTML='';
       tc.appendChild(frame);
     } else {
-      tc.innerHTML='<div class="empty"><div class="empty-icon">📖</div><div class="empty-title">No textbook questions yet</div><div class="empty-sub">Upload the solved exercises HTML via Supabase SQL to see them here.</div></div>';
+      tc.innerHTML='<div class="empty"><div class="empty-icon">📖</div><div class="empty-title">No textbook questions yet</div><div class="empty-sub">Solved exercises will appear here once added via Supabase.</div></div>';
     }
   } else if(curTab==='chat'){
     tc.innerHTML=`
@@ -729,7 +739,7 @@ async function createTopic(){
   var name=document.getElementById('newTopicName').value.trim();
   if(!name){alert('Please enter a topic name');return;}
   var data=await sbPost('topics',{user_id:user.id,subject:curSubject.id,topic_name:name,raw_content:'[]',flashcards:'[]',quiz:'[]',simulation:'',status:'in_progress',page_count:0});
-  if(data&&data[0]){allTopics.push(data[0]);curTopic=data[0];curTab='upload';}
+  if(data&&data[0]){allTopics.push(data[0]);curTopic=data[0];curTab='upload';}else{alert('Failed to create topic. Check your internet connection and try again.');closeModal();document.getElementById('newTopicName').value='';renderSubjectView();return;}
   closeModal();document.getElementById('newTopicName').value='';
   renderSidebar();renderTopicView();
 }
