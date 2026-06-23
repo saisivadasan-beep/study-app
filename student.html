@@ -291,12 +291,20 @@ function renderTab(){
 
   if(curTab==='upload'){
     var savedNotes=t.notes||'';
-    var html='<div style="margin-bottom:10px">';
+    var savedTbq=t.textbook_questions||'';
+    var html='<div style="margin-bottom:16px">';
+    html+='<div style="font-size:14px;font-weight:700;margin-bottom:8px;color:#111">&#128196; Chapter Notes</div>';
     html+='<p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:8px">Paste your chapter notes below, then click the button to auto-generate flashcards, quiz and simulation.</p>';
-    html+='<textarea id="notesInput" style="width:100%;min-height:240px;padding:12px;border:1px solid;border-color:var(--color-border-secondary);border-radius:8px;font-size:13px;color:var(--color-text-primary);background:var(--color-background-primary);line-height:1.6;resize:vertical" placeholder="Paste your detailed chapter notes here...">'+savedNotes+'</textarea>';
+    html+='<textarea id="notesInput" style="width:100%;min-height:200px;padding:12px;border:1px solid;border-color:var(--color-border-secondary);border-radius:8px;font-size:13px;color:var(--color-text-primary);background:var(--color-background-primary);line-height:1.6;resize:vertical" placeholder="Paste your detailed chapter notes here...">'+savedNotes+'</textarea>';
     html+='</div>';
     html+='<button class="btn-dark" onclick="saveAndGenerate()">Generate Flashcards, Quiz and Simulation from Notes</button>';
     html+='<div class="status-msg" id="statusMsg"></div>';
+    html+='<hr style="margin:24px 0;border:none;border-top:1px solid #e5e5e0">';
+    html+='<div style="font-size:14px;font-weight:700;margin-bottom:8px;color:#111">&#128214; Textbook Questions &amp; Answers</div>';
+    html+='<p style="font-size:13px;color:var(--color-text-secondary);margin-bottom:8px">Paste your solved textbook exercises HTML here and save. They will appear in the Textbook Qs tab.</p>';
+    html+='<textarea id="tbqInput" style="width:100%;min-height:160px;padding:12px;border:1px solid;border-color:var(--color-border-secondary);border-radius:8px;font-size:13px;color:var(--color-text-primary);background:var(--color-background-primary);line-height:1.6;resize:vertical" placeholder="Paste your textbook Q&A HTML here...">'+savedTbq+'</textarea>';
+    html+='<button class="btn-dark" style="margin-top:10px" onclick="saveTextbookQs()">Save Textbook Questions</button>';
+    html+='<div class="status-msg" id="tbqStatusMsg"></div>';
     tc.innerHTML=html;
 } else if(curTab==='notes'){
     tc.innerHTML=t.notes?('<div class="notes-content">'+t.notes+'</div>'):'<div class="empty"><div class="empty-icon">📝</div><div class="empty-title">No notes yet</div><div class="empty-sub">Upload pages then click Finish Chapter.</div></div>';
@@ -425,14 +433,9 @@ function renderTab(){
     }
   } else if(curTab==='textbook'){
     if(t.textbook_questions){
-      var frame=document.createElement('iframe');
-      frame.style.cssText='width:100%;height:600px;border:none;border-radius:10px';
-      frame.setAttribute('sandbox','allow-scripts allow-same-origin');
-      frame.srcdoc=t.textbook_questions;
-      tc.innerHTML='';
-      tc.appendChild(frame);
+      tc.innerHTML=t.textbook_questions;
     } else {
-      tc.innerHTML='<div class="empty"><div class="empty-icon">&#128214;</div><div class="empty-title">No textbook questions yet</div><div class="empty-sub">Solved exercises will appear here once added via Supabase.</div></div>';
+      tc.innerHTML='<div class="empty"><div class="empty-icon">&#128214;</div><div class="empty-title">No textbook questions yet</div><div class="empty-sub">Paste your textbook Q&amp;A HTML in the Upload tab and click Generate.</div></div>';
     }
   } else if(curTab==='chat'){
     tc.innerHTML=`
@@ -543,6 +546,25 @@ function renderUploadBtns(){
     html+='<div style="font-size:12px;color:#999;text-align:center;margin-top:6px">'+curTopic.page_count+' pages ready to process</div>';
   }
   c.innerHTML=html;
+}
+
+
+async function saveTextbookQs(){
+  var el=document.getElementById('tbqInput');
+  if(!el){return;}
+  var tbqText=el.value.trim();
+  if(!tbqText){alert('Please paste your textbook Q&A HTML first.');return;}
+  var msg=document.getElementById('tbqStatusMsg');
+  if(msg)msg.textContent='Saving...';
+  try{
+    await sbPatch('topics','id=eq.'+curTopic.id,{textbook_questions:tbqText,updated_at:new Date().toISOString()});
+    curTopic.textbook_questions=tbqText;
+    for(var i=0;i<allTopics.length;i++){if(allTopics[i].id===curTopic.id){allTopics[i].textbook_questions=tbqText;break;}}
+    if(msg)msg.textContent='Textbook questions saved!';
+    setTimeout(function(){if(msg)msg.textContent='';},3000);
+  }catch(e){
+    if(msg)msg.textContent='Error saving: '+e.message;
+  }
 }
 
 async function saveAndGenerate(){
@@ -916,7 +938,7 @@ async function sendChat() {
 
 </script>
 
-<div id="lightbox" onclick="closeLightbox()" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);z-index:9999;align-items:center;justify-content:center;flex-direction:column"><button onclick="event.stopPropagation();closeLightbox()" style="position:fixed;top:18px;right:24px;background:none;border:none;color:#fff;font-size:40px;cursor:pointer;z-index:10000">&#x2715;</button><img id="lightboxImg" src="" onclick="event.stopPropagation()" style="max-width:92vw;max-height:86vh;object-fit:contain;border-radius:8px"><div id="lightboxCaption" style="color:#ddd;font-size:13px;margin-top:14px"></div></div>
+<div id="lightbox" onclick="closeLightbox()" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.92);z-index:9999;align-items:center;justify-content:center;flex-direction:column"><button onclick="event.stopPropagation();closeLightbox()" style="position:fixed;top:18px;right:24px;background:none;border:none;color:#fff;font-size:40px;cursor:pointer;z-index:10000">&#x2715;</button><img id="lightboxImg" src="" onclick="event.stopPropagation()" style="max-width:92vw;max-height:86vh;object-fit:contain;border-radius:8px"><div id="lightboxCaption" style="color:#ddd;font-size:13px;margin-top:14px;text-align:center"></div></div>
 <script>
 function openLightbox(u,n){document.getElementById("lightboxImg").src=u;document.getElementById("lightboxCaption").textContent=n||"";document.getElementById("lightbox").style.display="flex";document.body.style.overflow="hidden";}
 function closeLightbox(){document.getElementById("lightbox").style.display="none";document.getElementById("lightboxImg").src="";document.body.style.overflow="";}
